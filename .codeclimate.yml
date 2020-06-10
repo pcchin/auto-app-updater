@@ -1,0 +1,26 @@
+# Required to adjust maintainability checks
+version: "2"
+checks:
+  argument-count:
+    config:
+      threshold: 6 # Some functions have / require 6 arguments
+  method-complexity:
+    config:
+      threshold: 15 # Based on sonar-java
+plugins:
+  fixme:
+    enabled: true
+  pmd:
+    enabled: true
+  sonar-java:
+    enabled: true
+    checks:
+      # End switch statement with break, disabled as many options needed to fall through
+      squid:S128:
+        enabled: false
+      # Most switches do not need to have default
+      squid:SwitchLastCaseIsDefaultCheck:
+        enabled: false
+      # Recommends usage of Files.delete, which is not available until API level 26
+      squid:S4042:
+        enabled: false

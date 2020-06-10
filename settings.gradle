@@ -1,0 +1,3 @@
+include ':auto-app-updater'
+include ':app'
+rootProject.name = "aausample"
