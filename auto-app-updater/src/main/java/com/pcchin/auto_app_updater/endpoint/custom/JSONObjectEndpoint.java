@@ -11,11 +11,20 @@
  * limitations under the License.
  */
 
-package com.pcchin.auto_app_updater;
+package com.pcchin.auto_app_updater.endpoint.custom;
 
-/** A utility class that contains templates which will be replaced with certain variables when shown. **/
-public final class UpdateMessageTemplates {
-    private UpdateMessageTemplates() {
-        throw new IllegalStateException("Utility class!");
+import com.android.volley.Request;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.pcchin.auto_app_updater.endpoint.Endpoint;
+
+/** The endpoint which returns a JSON object.
+ * The object is assumed to contain no further objects. **/
+public class JSONObjectEndpoint extends Endpoint {
+    private JsonObjectRequest request;
+
+    /** Gets the JsonObjectRequest required to run the app. **/
+    @Override
+    public Request<?> getRequest() {
+        return request;
     }
 }

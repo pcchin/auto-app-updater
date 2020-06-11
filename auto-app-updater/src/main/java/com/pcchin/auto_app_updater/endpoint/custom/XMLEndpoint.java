@@ -14,7 +14,6 @@
 package com.pcchin.auto_app_updater.endpoint.custom;
 
 import com.android.volley.Request;
-import com.android.volley.Response;
 import com.pcchin.auto_app_updater.endpoint.Endpoint;
 
 public class XMLEndpoint extends Endpoint {
@@ -25,11 +24,6 @@ public class XMLEndpoint extends Endpoint {
     @Override
     public Request<?> getRequest() {
         return null;
-    }
-
-    @Override
-    public void onResponse(Response<?> response) {
-
     }
 
 }

@@ -13,14 +13,20 @@
 
 package com.pcchin.aausample;
 
+import android.os.Bundle;
+
 import androidx.appcompat.app.AppCompatActivity;
 
-import android.os.Bundle;
+import com.pcchin.auto_app_updater.AutoAppUpdater;
 
 public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        AutoAppUpdater updater = new AutoAppUpdater.Builder(MainActivity.this, getSupportFragmentManager())
+                .setUpdateType(AutoAppUpdater.UPDATE_TYPE.DIFFERENCE)
+                .create();
+        updater.run();
     }
 }

@@ -13,9 +13,16 @@
 
 package com.pcchin.auto_app_updater;
 
+import android.app.Notification;
+import android.app.PendingIntent;
 import android.content.Context;
+import android.content.Intent;
+import android.graphics.Color;
+import android.media.RingtoneManager;
+import android.os.Build;
 
 import androidx.annotation.NonNull;
+import androidx.core.app.NotificationCompat;
 import androidx.fragment.app.FragmentManager;
 
 import com.android.volley.RequestQueue;
@@ -36,7 +43,7 @@ public class AutoAppUpdater {
     private int updateInterval; // The update interval for the app (In seconds).
     private List<Endpoint> endpointList; // All the possible endpoints for updating the app.
     private UpdaterDialog updateDialog; // The dialog that is shown when the update is called.
-    private RequestQueue queue; // The request queue to send the requests.
+    private RequestQueue queue; // The request queue to send the requests
 
     private String currentVersionStr; // The current version for the app. (UPDATE_TYPE.DIFFERENCE)
     private int currentVersionInt; // The current version for the app. (UPDATE_TYPE.INCREMENTAL)
@@ -62,11 +69,14 @@ public class AutoAppUpdater {
 
     /** Starts the update checking process. **/
     public void run() {
+        if (endpointList.size() > 0) {
+            endpointList.get(0).update();
+        }
     }
 
     /** The builder class for creating the AutoAppUpdater.
      * The order of method calls should be
-     * setUpdateType -> setCurrentVersion -> setUpdateDialog -> addEndpoint / addEndpoints. **/
+     * setUpdateType -> setCurrentVersion -> setNotifChannel (If needed) -> setUpdateDialog -> addEndpoint / addEndpoints. **/
     public static class Builder {
         private Context bContext;
         private FragmentManager bFragmentManager;
@@ -78,6 +88,11 @@ public class AutoAppUpdater {
         private UpdaterDialog bUpdateDialog; // Defaults to UpdaterDialog without any additional arguments.
         private RequestQueue bQueue;
 
+        // Variables that are only present inside the builder
+        private boolean bShowNotif;
+        private String bNotifChannel;
+
+        // Current version
         private String bCurrentVersionStr;
         private Integer bCurrentVersionInt;
         private Float bCurrentVersionDecimal;
@@ -98,6 +113,7 @@ public class AutoAppUpdater {
             this.bUpdateDialog = new UpdaterDialog();
             this.bFragmentManager = manager;
             this.bQueue = Volley.newRequestQueue(context);
+            this.bShowNotif = true;
         }
 
         /** Sets the update type of the updater.
@@ -196,8 +212,44 @@ public class AutoAppUpdater {
          * This should be called before addEndpoint or addEndpoints call as they rely on this dialog.
          * If you wish to use a custom dialog, you would need to overwrite UpdaterDialog to do so. **/
         public Builder setUpdateDialog(@NonNull UpdaterDialog dialog) {
+            if (bShowNotif) {
+                dialog.setNotification(getNotification());
+            }
             this.bUpdateDialog = dialog;
             return this;
+        }
+
+        /** Sets whether to show notifications when an update is needed.  **/
+        public Builder setShowNotif(boolean showNotif) {
+            this.bShowNotif = showNotif;
+            return this;
+        }
+
+        /** Sets the notification channel that would be used to display notifications,
+         * defaults to "App Update". This feature is only available for
+         * Build.VERSION_CODES.O and above. Defaults to 'App Update'. **/
+        public Builder setNotifChannel(String channel) {
+            this.bNotifChannel = channel;
+            return this;
+        }
+
+        /** Gets the notification that will be shown if the app is updated.
+         * Override this function if you wish to display a custom notification. **/
+        public Notification getNotification() {
+            Intent intent = new Intent(bContext, bContext.getClass());
+            intent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+            PendingIntent pendingIntent = PendingIntent.getActivity(bContext, 0, intent, 0);
+            NotificationCompat.Builder builder = new NotificationCompat.Builder(bContext, bContext.getPackageName())
+                    .setContentTitle(UpdaterFunctions.getApplicationName(bContext))
+                    .setContentText("Update App")
+                    .setContentIntent(pendingIntent)
+                    .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                    .setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION))
+                    .setLights(Color.BLUE, 2000, 0)
+                    .setVibrate(new long[]{0, 250, 250, 250, 250})
+                    .setAutoCancel(true);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) builder.setChannelId(bNotifChannel);
+            return builder.build();
         }
 
         /** Sets the properties of the endpoint. **/
@@ -225,7 +277,7 @@ public class AutoAppUpdater {
         }
 
         /** Sets up the chain of endpoints which depend on one another. **/
-        public void initEndpointList() {
+        private void initEndpointList() {
             Collections.reverse(this.bEndpointList);
             for (int i = 0; i < this.bEndpointList.size(); i++) {
                 if (i + 1 < this.bEndpointList.size()) {

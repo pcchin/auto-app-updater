@@ -18,22 +18,21 @@ import androidx.fragment.app.FragmentManager;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
-import com.android.volley.Response;
 import com.pcchin.auto_app_updater.UpdaterDialog;
 
 /** The endpoint used to get the updater service. **/
 public abstract class Endpoint {
     // The endpoint that will be called if this endpoint fails.
-    private Endpoint backupEndpoint;
-    private UpdaterDialog updateDialog;
-    private FragmentManager manager;
-    private String tag;
-    private RequestQueue queue;
+    protected Endpoint backupEndpoint;
+    protected UpdaterDialog updateDialog;
+    protected FragmentManager manager;
+    protected String tag;
+    protected RequestQueue queue;
 
     // Current version
-    private String currentVersionStr;
-    private int currentVersionInt;
-    private float currentVersionDecimal;
+    protected String currentVersionStr;
+    protected int currentVersionInt;
+    protected float currentVersionDecimal;
 
     /** The constructor for the endpoint. **/
     public Endpoint() {
@@ -86,18 +85,15 @@ public abstract class Endpoint {
         queue.add(getRequest());
     }
 
-    /** Gets the Volley request for the current endpoint. **/
+    /** Gets the Volley request for the current endpoint.
+     * onFailure can be thrown from here if the request fails. **/
     public abstract Request<?> getRequest();
-
-    /** The function that is called when the Volley response is returned. **/
-    public abstract void onResponse(Response<?> response);
 
     /** The function that is called if the latest version is able to be successfully retrieved.
      * This function would only be called if the update type is UPDATE_TYPE.DIFFERENCE. **/
     public void onSuccess(@NonNull String version, @NonNull String downloadLink) {
         if (!version.equals(currentVersionStr)) {
-            updateDialog.setDownloadLink(downloadLink);
-            updateDialog.show(manager, tag);
+            updateApp(downloadLink);
         }
     }
 
@@ -105,8 +101,7 @@ public abstract class Endpoint {
      * This function would only be called if the update type is UPDATE_TYPE.INCREMENTAL. **/
     public void onSuccess(int version, @NonNull String downloadLink) {
         if (version > currentVersionInt) {
-            updateDialog.setDownloadLink(downloadLink);
-            updateDialog.show(manager, tag);
+            updateApp(downloadLink);
         }
     }
 
@@ -114,9 +109,14 @@ public abstract class Endpoint {
      * This function would only be called if the update type is UPDATE_TYPE.INCREMENTAL. **/
     public void onSuccess(float version, @NonNull String downloadLink) {
         if (version > currentVersionDecimal) {
-            updateDialog.setDownloadLink(downloadLink);
-            updateDialog.show(manager, tag);
+            updateApp(downloadLink);
         }
+    }
+
+    /** Displays the AlertDialog and push notification for updating the app. **/
+    private void updateApp(String downloadLink) {
+        updateDialog.setDownloadLink(downloadLink);
+        updateDialog.show(manager, tag);
     }
 
     /** The function that is called if the endpoint fails.

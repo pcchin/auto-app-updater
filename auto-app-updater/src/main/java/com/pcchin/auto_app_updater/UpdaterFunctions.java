@@ -14,6 +14,7 @@
 package com.pcchin.auto_app_updater;
 
 import android.content.Context;
+import android.content.pm.ApplicationInfo;
 import android.net.ConnectivityManager;
 import android.net.Network;
 import android.net.NetworkCapabilities;
@@ -62,5 +63,12 @@ public class UpdaterFunctions {
             }
         }
         return false;
+    }
+
+    /** Gets the application name of the app from the given context. **/
+    public static String getApplicationName(@NonNull Context context) {
+        ApplicationInfo applicationInfo = context.getApplicationInfo();
+        int stringId = applicationInfo.labelRes;
+        return stringId == 0 ? applicationInfo.nonLocalizedLabel.toString() : context.getString(stringId);
     }
 }

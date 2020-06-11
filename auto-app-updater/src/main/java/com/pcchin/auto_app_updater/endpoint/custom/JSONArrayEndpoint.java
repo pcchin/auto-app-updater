@@ -14,22 +14,13 @@
 package com.pcchin.auto_app_updater.endpoint.custom;
 
 import com.android.volley.Request;
-import com.android.volley.Response;
 import com.pcchin.auto_app_updater.endpoint.Endpoint;
 
-public class JSONEndpoint extends Endpoint {
-    public JSONEndpoint() {
-        super();
-    }
-
+/** Thee endpoint which returns a JSON array.
+ * It is assumed that each object in the array would contain the same attributes. **/
+public class JSONArrayEndpoint extends Endpoint {
     @Override
     public Request<?> getRequest() {
         return null;
     }
-
-    @Override
-    public void onResponse(Response<?> response) {
-
-    }
-
 }
