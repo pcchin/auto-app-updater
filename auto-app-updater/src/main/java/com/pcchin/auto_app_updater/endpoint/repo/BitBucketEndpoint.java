@@ -16,4 +16,27 @@ package com.pcchin.auto_app_updater.endpoint.repo;
 import com.pcchin.auto_app_updater.endpoint.Endpoint;
 
 public class BitBucketEndpoint extends Endpoint {
+    public BitBucketEndpoint(Endpoint backupEndpoint) {
+        super(backupEndpoint);
+    }
+
+    @Override
+    public void update() {
+
+    }
+
+    @Override
+    public void onSuccess(String version) {
+
+    }
+
+    @Override
+    public void onSuccess(int version) {
+
+    }
+
+    @Override
+    public void onSuccess(float version) {
+
+    }
 }

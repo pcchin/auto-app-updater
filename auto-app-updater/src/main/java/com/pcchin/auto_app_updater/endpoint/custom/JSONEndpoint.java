@@ -16,4 +16,27 @@ package com.pcchin.auto_app_updater.endpoint.custom;
 import com.pcchin.auto_app_updater.endpoint.Endpoint;
 
 public class JSONEndpoint extends Endpoint {
+    public JSONEndpoint(Endpoint backupEndpoint) {
+        super(backupEndpoint);
+    }
+
+    @Override
+    public void update() {
+
+    }
+
+    @Override
+    public void onSuccess(String version) {
+
+    }
+
+    @Override
+    public void onSuccess(int version) {
+
+    }
+
+    @Override
+    public void onSuccess(float version) {
+
+    }
 }

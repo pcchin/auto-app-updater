@@ -16,6 +16,8 @@ package com.pcchin.auto_app_updater;
 import android.content.Context;
 
 import androidx.annotation.NonNull;
+import androidx.fragment.app.DialogFragment;
+import androidx.fragment.app.FragmentManager;
 
 import com.pcchin.auto_app_updater.endpoint.Endpoint;
 
@@ -23,11 +25,15 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+/** An updater that checks for updates to the app. **/
 public class AutoAppUpdater {
     private Context context;
+    private FragmentManager manager;
+    private String fragmentTag;
     private UPDATE_TYPE updateType;
-    private List<Endpoint> endpointList; // All the possible endpoints for updating the app.
     private int updateInterval; // The update interval for the app (In seconds).
+    private List<Endpoint> endpointList; // All the possible endpoints for updating the app.
+    private DialogFragment updateDialog; // The dialog that is shown when the update is called.
 
     private String currentVersionStr; // The current version for the app. (UPDATE_TYPE.DIFFERENCE)
     private int currentVersionInt; // The current version for the app. (UPDATE_TYPE.INCREMENTAL)
@@ -45,16 +51,25 @@ public class AutoAppUpdater {
     }
 
     /** The constructor for the class, only used by the builder. **/
-    private AutoAppUpdater(Context context) {
+    private AutoAppUpdater(Context context, FragmentManager manager, String fragmentTag) {
         this.context = context;
+        this.manager = manager;
+        this.fragmentTag = fragmentTag;
+    }
+
+    /** Starts the update checking process. **/
+    public void run() {
     }
 
     /** The builder class for creating the AutoAppUpdater. **/
     public static class Builder {
         private Context bContext;
+        private FragmentManager bFragmentManager;
+        private String bFragmentTag; // The tag of the fragment that would be shown, defaults, to "AutoAppUpdater".
         private UPDATE_TYPE bUpdateType; // The update type of the app, defaults to UPDATE_TYPE.DIFFERENCE.
         private int bUpdateInterval; // The interval between updating the app (In seconds), defaults to 86400 (One day).
         private List<Endpoint> bEndpointList = new ArrayList<>();
+        private DialogFragment bUpdateDialog; // Defaults to UpdaterDialog without any additional arguments.
 
         private String bCurrentVersionStr;
         private Integer bCurrentVersionInt;
@@ -62,10 +77,19 @@ public class AutoAppUpdater {
 
         /** The default constructor for the builder.
          * The default values for variables are set here. **/
-        public Builder(@NonNull Context context) {
+        public Builder(@NonNull Context context, @NonNull FragmentManager manager) {
+            this(context, manager, "AutoAppUpdater");
+        }
+
+        /** The default constructor for the builder.
+         * The default values for variables are set here. **/
+        public Builder(@NonNull Context context, @NonNull FragmentManager manager, String tag) {
             this.bContext = context;
             this.bUpdateType = UPDATE_TYPE.DIFFERENCE;
+            this.bFragmentTag = tag;
             this.bUpdateInterval = 60 * 60 * 24;
+            this.bUpdateDialog = new UpdaterDialog();
+            this.bFragmentManager = manager;
         }
 
         /** Sets the update type of the updater.
@@ -90,7 +114,7 @@ public class AutoAppUpdater {
         /** Sets the current version of the app.
          * This should be used in conjunction with UPDATE_TYPE.DIFFERENCE
          * and should be used after setUpdateType is called. **/
-        public Builder setCurrentVersion(String version) {
+        public Builder setCurrentVersion(@NonNull String version) {
             if (bUpdateType != UPDATE_TYPE.DIFFERENCE) {
                 throw new IllegalStateException(String.format("Incorrect update type set, expected" +
                         " UPDATE_TYPE.DIFFERENCE but got %s", bUpdateType));
@@ -125,14 +149,14 @@ public class AutoAppUpdater {
 
         /** Adds an endpoint to the app. This should not be used in conjunction with setEndpoints as
          * setEndpoints will overwrite any previously stored endpoints. **/
-        public Builder addEndpoint(Endpoint endpoint) {
+        public Builder addEndpoint(@NonNull Endpoint endpoint) {
             bEndpointList.add(endpoint);
             return this;
         }
 
         /** Sets the endpoints for the app, takes in a list containing multiple endpoints.
          * The endpoints at the start of the list will be executed first. **/
-        public Builder setEndpoints(List<Endpoint> endpoints) {
+        public Builder setEndpoints(@NonNull List<Endpoint> endpoints) {
             this.bEndpointList = endpoints;
             return this;
         }
@@ -144,6 +168,12 @@ public class AutoAppUpdater {
             return this;
         }
 
+        /** Sets the update dialog for the updater, defaults to UpdaterDialog without any additional arguments. **/
+        public Builder setUpdateDialog(@NonNull DialogFragment dialog) {
+            this.bUpdateDialog = dialog;
+            return this;
+        }
+
         /** Throws an IllegalArgumentException that the current version of the app is not set. **/
         private void throwUnsetCurrentVersion() {
             throw new IllegalArgumentException("Current version of app not set. Is setCurrentVersion called?");
@@ -151,11 +181,11 @@ public class AutoAppUpdater {
 
         /** Creates the Auto App Updater based on the parameters given. **/
         public AutoAppUpdater create() {
-            AutoAppUpdater updater = new AutoAppUpdater(bContext);
+            AutoAppUpdater updater = new AutoAppUpdater(bContext, bFragmentManager, bFragmentTag);
             updater.updateType = this.bUpdateType;
             updater.endpointList = this.bEndpointList;
             updater.updateInterval = this.bUpdateInterval;
-            if (updater.updateType == UPDATE_TYPE.DIFFERENCE) {
+            if (bUpdateType == UPDATE_TYPE.DIFFERENCE) {
                 if (bCurrentVersionStr == null) throwUnsetCurrentVersion();
                 updater.currentVersionStr = bCurrentVersionStr;
             } else if (bUpdateType == UPDATE_TYPE.INCREMENTAL) {
@@ -165,6 +195,7 @@ public class AutoAppUpdater {
                 if (bCurrentVersionDecimal == null) throwUnsetCurrentVersion();
                 updater.currentVersionDecimal = bCurrentVersionDecimal;
             }
+            updater.updateDialog = bUpdateDialog;
             return updater;
         }
     }
