@@ -19,10 +19,11 @@ import androidx.annotation.NonNull;
 import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.FragmentManager;
 
+import com.android.volley.RequestQueue;
+import com.android.volley.toolbox.Volley;
 import com.pcchin.auto_app_updater.endpoint.Endpoint;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 /** An updater that checks for updates to the app. **/
@@ -30,10 +31,12 @@ public class AutoAppUpdater {
     private Context context;
     private FragmentManager manager;
     private String fragmentTag;
+
     private UPDATE_TYPE updateType;
     private int updateInterval; // The update interval for the app (In seconds).
     private List<Endpoint> endpointList; // All the possible endpoints for updating the app.
     private DialogFragment updateDialog; // The dialog that is shown when the update is called.
+    private RequestQueue queue; // The request queue to send the requests.
 
     private String currentVersionStr; // The current version for the app. (UPDATE_TYPE.DIFFERENCE)
     private int currentVersionInt; // The current version for the app. (UPDATE_TYPE.INCREMENTAL)
@@ -61,15 +64,19 @@ public class AutoAppUpdater {
     public void run() {
     }
 
-    /** The builder class for creating the AutoAppUpdater. **/
+    /** The builder class for creating the AutoAppUpdater.
+     * The order of method calls should be
+     * setUpdateType -> setCurrentVersion -> setUpdateDialog -> addEndpoint / addEndpoints. **/
     public static class Builder {
         private Context bContext;
         private FragmentManager bFragmentManager;
         private String bFragmentTag; // The tag of the fragment that would be shown, defaults, to "AutoAppUpdater".
+
         private UPDATE_TYPE bUpdateType; // The update type of the app, defaults to UPDATE_TYPE.DIFFERENCE.
         private int bUpdateInterval; // The interval between updating the app (In seconds), defaults to 86400 (One day).
         private List<Endpoint> bEndpointList = new ArrayList<>();
         private DialogFragment bUpdateDialog; // Defaults to UpdaterDialog without any additional arguments.
+        private RequestQueue bQueue;
 
         private String bCurrentVersionStr;
         private Integer bCurrentVersionInt;
@@ -90,6 +97,7 @@ public class AutoAppUpdater {
             this.bUpdateInterval = 60 * 60 * 24;
             this.bUpdateDialog = new UpdaterDialog();
             this.bFragmentManager = manager;
+            this.bQueue = Volley.newRequestQueue(context);
         }
 
         /** Sets the update type of the updater.
@@ -147,31 +155,66 @@ public class AutoAppUpdater {
             return this;
         }
 
-        /** Adds an endpoint to the app. This should not be used in conjunction with setEndpoints as
-         * setEndpoints will overwrite any previously stored endpoints. **/
+        /** Adds an endpoint to the app.
+         * This should be used after setCurrentVersion is called. **/
         public Builder addEndpoint(@NonNull Endpoint endpoint) {
+            checkEndpointRequirements();
+            setEndpointProperties(endpoint);
             bEndpointList.add(endpoint);
             return this;
         }
 
         /** Sets the endpoints for the app, takes in a list containing multiple endpoints.
          * The endpoints at the start of the list will be executed first. **/
-        public Builder setEndpoints(@NonNull List<Endpoint> endpoints) {
-            this.bEndpointList = endpoints;
+        public Builder addEndpoints(@NonNull List<Endpoint> endpoints) {
+            checkEndpointRequirements();
+            for (Endpoint endpoint: endpoints) {
+                setEndpointProperties(endpoint);
+                bEndpointList.add(endpoint);
+            }
             return this;
         }
 
         /** Sets the endpoints for the app, takes in multiple arguments.
          * The endpoints at the start of the arguments list will be executed first. **/
-        public Builder setEndpoints(Endpoint... endpoints) {
-            this.bEndpointList = Arrays.asList(endpoints);
+        public Builder addEndpoints(@NonNull Endpoint... endpoints) {
+            checkEndpointRequirements();
+            for (Endpoint endpoint: endpoints) {
+                setEndpointProperties(endpoint);
+                bEndpointList.add(endpoint);
+            }
             return this;
         }
 
-        /** Sets the update dialog for the updater, defaults to UpdaterDialog without any additional arguments. **/
+        /** Sets the update dialog for the updater, defaults to UpdaterDialog without any additional arguments.
+         * This should be called before addEndpoint or addEndpoints call as they rely on this dialog. **/
         public Builder setUpdateDialog(@NonNull DialogFragment dialog) {
             this.bUpdateDialog = dialog;
             return this;
+        }
+
+        /** Sets the properties of the endpoint. **/
+        private void setEndpointProperties(@NonNull Endpoint endpoint) {
+            endpoint.setUpdateDialog(bUpdateDialog, bFragmentManager, bFragmentTag);
+            if (bUpdateType == UPDATE_TYPE.DIFFERENCE) {
+                endpoint.setCurrentVersion(bCurrentVersionStr);
+            } else if (bUpdateType == UPDATE_TYPE.INCREMENTAL) {
+                endpoint.setCurrentVersion(bCurrentVersionInt);
+            } else {
+                endpoint.setCurrentVersion(bCurrentVersionDecimal);
+            }
+            endpoint.setRequestQueue(bQueue);
+        }
+
+        /** Check whether the requirements are met for the endpoint. **/
+        private void checkEndpointRequirements() {
+            if (bUpdateType == null) {
+                throw new IllegalStateException("Update type should be set before endpoints can be added.");
+            } else if (bCurrentVersionStr == null && bCurrentVersionInt == null && bCurrentVersionDecimal == null) {
+                throw new IllegalStateException("setCurrentVersion should be called before endpoints can be added.");
+            } else if (bUpdateDialog == null) {
+                throw new IllegalStateException("Update dialog should be provided before endpoints can be added.");
+            }
         }
 
         /** Throws an IllegalArgumentException that the current version of the app is not set. **/
@@ -199,4 +242,5 @@ public class AutoAppUpdater {
             return updater;
         }
     }
+
 }

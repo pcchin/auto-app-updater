@@ -16,4 +16,7 @@ package com.pcchin.auto_app_updater;
 import androidx.fragment.app.DialogFragment;
 
 public class UpdaterDialog extends DialogFragment {
+    private String updateMessage = "A newer version of the app is available. Would you like to update to the latest version?";
+    private boolean showReleaseInfo = false;
+    private boolean showLearnMore = false;
 }

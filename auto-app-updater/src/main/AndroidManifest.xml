@@ -11,5 +11,7 @@
   ~ limitations under the License.
   -->
 
-<manifest package="com.pcchin.auto_app_updater">
+<manifest package="com.pcchin.auto_app_updater"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 </manifest>

@@ -13,6 +13,8 @@
 
 package com.pcchin.auto_app_updater.endpoint.repo;
 
+import com.android.volley.Request;
+import com.android.volley.Response;
 import com.pcchin.auto_app_updater.endpoint.Endpoint;
 
 public class GitHubEndpoint extends Endpoint {
@@ -21,22 +23,13 @@ public class GitHubEndpoint extends Endpoint {
     }
 
     @Override
-    public void update() {
-
+    public Request<?> getRequest() {
+        return null;
     }
 
     @Override
-    public void onSuccess(String version) {
+    public void onResponse(Response<?> response) {
 
     }
 
-    @Override
-    public void onSuccess(int version) {
-
-    }
-
-    @Override
-    public void onSuccess(float version) {
-
-    }
 }
