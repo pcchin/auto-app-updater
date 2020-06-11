@@ -11,16 +11,7 @@
  * limitations under the License.
  */
 
-package com.pcchin.aausample;
+package com.pcchin.auto_app_updater;
 
-import androidx.appcompat.app.AppCompatActivity;
-
-import android.os.Bundle;
-
-public class MainActivity extends AppCompatActivity {
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-    }
+public final class UpdaterOptions {
 }
