@@ -18,8 +18,8 @@ import com.android.volley.Response;
 import com.pcchin.auto_app_updater.endpoint.Endpoint;
 
 public class XMLEndpoint extends Endpoint {
-    public XMLEndpoint(Endpoint backupEndpoint) {
-        super(backupEndpoint);
+    public XMLEndpoint() {
+        super();
     }
 
     @Override

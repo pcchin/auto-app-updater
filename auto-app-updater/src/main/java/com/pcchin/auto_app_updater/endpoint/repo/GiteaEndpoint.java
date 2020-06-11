@@ -18,8 +18,8 @@ import com.android.volley.Response;
 import com.pcchin.auto_app_updater.endpoint.Endpoint;
 
 public class GiteaEndpoint extends Endpoint {
-    public GiteaEndpoint(Endpoint backupEndpoint) {
-        super(backupEndpoint);
+    public GiteaEndpoint() {
+        super();
     }
 
     @Override

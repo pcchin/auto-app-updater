@@ -23,6 +23,7 @@ import com.android.volley.toolbox.Volley;
 import com.pcchin.auto_app_updater.endpoint.Endpoint;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /** An updater that checks for updates to the app. **/
@@ -165,13 +166,19 @@ public class AutoAppUpdater {
 
         /** Sets the endpoints for the app, takes in a list containing multiple endpoints.
          * The endpoints at the start of the list will be executed first. **/
-        public Builder addEndpoints(@NonNull List<Endpoint> endpoints) {
+        public Builder addEndpointList(@NonNull List<Endpoint> endpoints) {
             checkEndpointRequirements();
             for (Endpoint endpoint: endpoints) {
                 setEndpointProperties(endpoint);
                 bEndpointList.add(endpoint);
             }
             return this;
+        }
+
+        /** Sets the endpoints for the app, takes in a list containing multiple endpoints.
+         * The endpoints at the start of the list will be executed first. **/
+        public Builder addEndpointList(@NonNull Endpoint[] endpoints) {
+            return addEndpoints(endpoints);
         }
 
         /** Sets the endpoints for the app, takes in multiple arguments.
@@ -217,6 +224,17 @@ public class AutoAppUpdater {
             }
         }
 
+        /** Sets up the chain of endpoints which depend on one another. **/
+        public void initEndpointList() {
+            Collections.reverse(this.bEndpointList);
+            for (int i = 0; i < this.bEndpointList.size(); i++) {
+                if (i + 1 < this.bEndpointList.size()) {
+                    this.bEndpointList.get(i).setBackupEndpoint(this.bEndpointList.get(i + 1));
+                }
+            }
+            Collections.reverse(this.bEndpointList);
+        }
+
         /** Throws an IllegalArgumentException that the current version of the app is not set. **/
         private void throwUnsetCurrentVersion() {
             throw new IllegalArgumentException("Current version of app not set. Is setCurrentVersion called?");
@@ -226,6 +244,7 @@ public class AutoAppUpdater {
         public AutoAppUpdater create() {
             AutoAppUpdater updater = new AutoAppUpdater(bContext, bFragmentManager, bFragmentTag);
             updater.updateType = this.bUpdateType;
+            initEndpointList();
             updater.endpointList = this.bEndpointList;
             updater.updateInterval = this.bUpdateInterval;
             if (bUpdateType == UPDATE_TYPE.DIFFERENCE) {
@@ -242,5 +261,4 @@ public class AutoAppUpdater {
             return updater;
         }
     }
-
 }

@@ -18,8 +18,8 @@ import com.android.volley.Response;
 import com.pcchin.auto_app_updater.endpoint.Endpoint;
 
 public class SourceForgeEndpoint extends Endpoint {
-    public SourceForgeEndpoint(Endpoint backupEndpoint) {
-        super(backupEndpoint);
+    public SourceForgeEndpoint() {
+        super();
     }
 
     @Override

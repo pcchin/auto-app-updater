@@ -18,8 +18,8 @@ import com.android.volley.Response;
 import com.pcchin.auto_app_updater.endpoint.Endpoint;
 
 public class GitHubEndpoint extends Endpoint {
-    public GitHubEndpoint(Endpoint backupEndpoint) {
-        super(backupEndpoint);
+    public GitHubEndpoint() {
+        super();
     }
 
     @Override

@@ -18,8 +18,8 @@ import com.android.volley.Response;
 import com.pcchin.auto_app_updater.endpoint.Endpoint;
 
 public class JSONEndpoint extends Endpoint {
-    public JSONEndpoint(Endpoint backupEndpoint) {
-        super(backupEndpoint);
+    public JSONEndpoint() {
+        super();
     }
 
     @Override
