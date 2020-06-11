@@ -16,7 +16,28 @@ package com.pcchin.auto_app_updater;
 import androidx.fragment.app.DialogFragment;
 
 public class UpdaterDialog extends DialogFragment {
+    private String downloadLink;
     private String updateMessage = "A newer version of the app is available. Would you like to update to the latest version?";
     private boolean showReleaseInfo = false;
     private boolean showLearnMore = false;
+
+    /** Sets the download link for the app.
+     * This function does not need to be called manually. **/
+    public void setDownloadLink(String link) {
+        this.downloadLink = link;
+    }
+
+    /** Sets the update message for the app. Certain templates can be used.
+     * The possible templates that can be used are found in UpdateMessageTemplates.class. **/
+    public void setUpdateMessage(String updateMessage) {
+        this.updateMessage = updateMessage;
+    }
+
+    public void setShowReleaseInfo(boolean showReleaseInfo) {
+        this.showReleaseInfo = showReleaseInfo;
+    }
+
+    public void setShowLearnMore(boolean showLearnMore) {
+        this.showLearnMore = showLearnMore;
+    }
 }

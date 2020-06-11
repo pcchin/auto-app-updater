@@ -14,7 +14,6 @@
 package com.pcchin.auto_app_updater.endpoint;
 
 import androidx.annotation.NonNull;
-import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.FragmentManager;
 
 import com.android.volley.Request;
@@ -26,7 +25,7 @@ import com.pcchin.auto_app_updater.UpdaterDialog;
 public abstract class Endpoint {
     // The endpoint that will be called if this endpoint fails.
     private Endpoint backupEndpoint;
-    private DialogFragment updateDialog;
+    private UpdaterDialog updateDialog;
     private FragmentManager manager;
     private String tag;
     private RequestQueue queue;
@@ -36,17 +35,21 @@ public abstract class Endpoint {
     private int currentVersionInt;
     private float currentVersionDecimal;
 
-    /** The constructor for the endpoint.
-     * The backup endpoint can be null if it fails.
-     * @param backupEndpoint The endpoint that will be called if this endpoint fails. **/
-    public Endpoint(Endpoint backupEndpoint) {
-        this.backupEndpoint = backupEndpoint;
+    /** The constructor for the endpoint. **/
+    public Endpoint() {
         this.updateDialog = new UpdaterDialog();
+    }
+
+    /** Sets the backup endpoint of the app.
+     * The endpoint can be null if no more backup endpoints are found.
+     * This function does not need to be called manually. **/
+    public void setBackupEndpoint(Endpoint backupEndpoint) {
+        this.backupEndpoint = backupEndpoint;
     }
 
     /** Sets the current version of the app from within AutoAppUpdater.
      * This function does not need to be called manually. **/
-    public void setUpdateDialog(DialogFragment dialog, FragmentManager manager, String tag) {
+    public void setUpdateDialog(UpdaterDialog dialog, FragmentManager manager, String tag) {
         this.updateDialog = dialog;
         this.manager = manager;
         this.tag = tag;
@@ -91,24 +94,27 @@ public abstract class Endpoint {
 
     /** The function that is called if the latest version is able to be successfully retrieved.
      * This function would only be called if the update type is UPDATE_TYPE.DIFFERENCE. **/
-    public void onSuccess(@NonNull String version) {
+    public void onSuccess(@NonNull String version, @NonNull String downloadLink) {
         if (!version.equals(currentVersionStr)) {
+            updateDialog.setDownloadLink(downloadLink);
             updateDialog.show(manager, tag);
         }
     }
 
     /** The function that is called if the latest version is able to be successfully retrieved.
      * This function would only be called if the update type is UPDATE_TYPE.INCREMENTAL. **/
-    public void onSuccess(int version) {
+    public void onSuccess(int version, @NonNull String downloadLink) {
         if (version > currentVersionInt) {
+            updateDialog.setDownloadLink(downloadLink);
             updateDialog.show(manager, tag);
         }
     }
 
     /** The function that is called if the latest version is able to be successfully retrieved.
      * This function would only be called if the update type is UPDATE_TYPE.INCREMENTAL. **/
-    public void onSuccess(float version) {
+    public void onSuccess(float version, @NonNull String downloadLink) {
         if (version > currentVersionDecimal) {
+            updateDialog.setDownloadLink(downloadLink);
             updateDialog.show(manager, tag);
         }
     }

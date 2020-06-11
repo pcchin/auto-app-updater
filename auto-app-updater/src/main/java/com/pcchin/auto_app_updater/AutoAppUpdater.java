@@ -16,7 +16,6 @@ package com.pcchin.auto_app_updater;
 import android.content.Context;
 
 import androidx.annotation.NonNull;
-import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.FragmentManager;
 
 import com.android.volley.RequestQueue;
@@ -35,7 +34,7 @@ public class AutoAppUpdater {
     private UPDATE_TYPE updateType;
     private int updateInterval; // The update interval for the app (In seconds).
     private List<Endpoint> endpointList; // All the possible endpoints for updating the app.
-    private DialogFragment updateDialog; // The dialog that is shown when the update is called.
+    private UpdaterDialog updateDialog; // The dialog that is shown when the update is called.
     private RequestQueue queue; // The request queue to send the requests.
 
     private String currentVersionStr; // The current version for the app. (UPDATE_TYPE.DIFFERENCE)
@@ -75,7 +74,7 @@ public class AutoAppUpdater {
         private UPDATE_TYPE bUpdateType; // The update type of the app, defaults to UPDATE_TYPE.DIFFERENCE.
         private int bUpdateInterval; // The interval between updating the app (In seconds), defaults to 86400 (One day).
         private List<Endpoint> bEndpointList = new ArrayList<>();
-        private DialogFragment bUpdateDialog; // Defaults to UpdaterDialog without any additional arguments.
+        private UpdaterDialog bUpdateDialog; // Defaults to UpdaterDialog without any additional arguments.
         private RequestQueue bQueue;
 
         private String bCurrentVersionStr;
@@ -187,8 +186,9 @@ public class AutoAppUpdater {
         }
 
         /** Sets the update dialog for the updater, defaults to UpdaterDialog without any additional arguments.
-         * This should be called before addEndpoint or addEndpoints call as they rely on this dialog. **/
-        public Builder setUpdateDialog(@NonNull DialogFragment dialog) {
+         * This should be called before addEndpoint or addEndpoints call as they rely on this dialog.
+         * If you wish to use a custom dialog, you would need to overwrite UpdaterDialog to do so. **/
+        public Builder setUpdateDialog(@NonNull UpdaterDialog dialog) {
             this.bUpdateDialog = dialog;
             return this;
         }

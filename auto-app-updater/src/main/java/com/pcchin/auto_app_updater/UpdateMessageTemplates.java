@@ -13,5 +13,9 @@
 
 package com.pcchin.auto_app_updater;
 
-public final class UpdaterOptions {
+/** A utility class that contains templates which will be replaced with certain variables when shown. **/
+public final class UpdateMessageTemplates {
+    private UpdateMessageTemplates() {
+        throw new IllegalStateException("Utility class!");
+    }
 }

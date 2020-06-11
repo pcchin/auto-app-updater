@@ -27,6 +27,10 @@ import java.util.List;
 
 /** A utility class for functions that are used in the updater. **/
 public class UpdaterFunctions {
+    private UpdaterFunctions() {
+        throw new IllegalStateException("Utility class!");
+    }
+
     /** A static function that returns whether the app is installed through the Google Play Store.
      * This can be useful to check if you do not wish for the app to be updated through AutoAppUpdater
      * if it is downloaded from the Play Store. **/
