@@ -11,20 +11,25 @@
  * limitations under the License.
  */
 
-package com.pcchin.auto_app_updater;
+package com.pcchin.auto_app_updater.utils;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
 import android.net.ConnectivityManager;
 import android.net.Network;
 import android.net.NetworkCapabilities;
 import android.net.NetworkInfo;
 import android.os.Build;
+import android.os.Environment;
 
 import androidx.annotation.NonNull;
 
+import java.io.File;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /** A utility class for functions that are used in the updater. **/
 public class UpdaterFunctions {
@@ -70,5 +75,41 @@ public class UpdaterFunctions {
         ApplicationInfo applicationInfo = context.getApplicationInfo();
         int stringId = applicationInfo.labelRes;
         return stringId == 0 ? applicationInfo.nonLocalizedLabel.toString() : context.getString(stringId);
+    }
+
+    /** Get the internal download directory of the app.
+     * Falls back to the root directory if no such download directory could be found.
+     * The path will always end in '/'. **/
+    @NonNull
+    public static String getInternalDownloadDir(@NonNull Context context) {
+        File downloadDirFile = context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS);
+        if (downloadDirFile == null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            downloadDirFile = context.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS);
+        }
+        return downloadDirFile == null ? "/storage/emulated/0/" : downloadDirFile.getAbsolutePath() + "/";
+    }
+
+    /** Generates a valid file in the required directory.
+     * If a file with the same name exists,
+     * a file with incrementing number will be added to the file.
+     * @param fullPathName The absolute path to the directory of the file including the file name.
+     * @param extension needs to include the . at the front.**/
+    public static String generateValidFile(String fullPathName, String extension) {
+        String returnFile = fullPathName + extension;
+        int i = 1;
+        while (new File(returnFile).exists() && i < Integer.MAX_VALUE) {
+            returnFile = fullPathName + "(" + i + ")" + extension;
+            i++;
+        }
+        return returnFile;
+    }
+
+    /** Gets the set of Strings of the downloaded APKs.
+     * Returns a new HashSet if no values are found. **/
+    @NonNull
+    public static Set<String> getStringSet(@NonNull SharedPreferences sharedPref) {
+        Set<String> sharedPrefValues = sharedPref.getStringSet("previousApkList", null);
+        if (sharedPrefValues == null) return new HashSet<>();
+        else return new HashSet<>(sharedPrefValues);
     }
 }

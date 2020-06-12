@@ -11,11 +11,10 @@
  * limitations under the License.
  */
 
-package com.pcchin.auto_app_updater;
+package com.pcchin.auto_app_updater.dialogs;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
-import android.app.Notification;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
@@ -23,27 +22,37 @@ import android.os.Bundle;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.core.app.NotificationManagerCompat;
 import androidx.fragment.app.DialogFragment;
+
+import com.pcchin.auto_app_updater.utils.APKDownloader;
 
 public class UpdaterDialog extends DialogFragment {
     private boolean rotatable = true;
     private Dialog dialog;
 
+    private String contentProvider;
+    private String currentVersion;
+    private String newVersion;
     private String downloadLink;
     private String updateMessage = "A newer version of the app is available. Would you like to update to the latest version?";
     private boolean showReleaseInfo = false;
     private String releaseInfo = "";
     private boolean showLearnMore = false;
+    private boolean showDownloadingDialog = true;
     private String learnMoreUrl = "about:blank";
     private String title = "Update App";
-    private Notification notification;
 
     //****** Start of constructors ******//
 
-    /** Default constructor. **/
+    /** Default constructor, should not be used. **/
     public UpdaterDialog() {
         setRetainInstance(true);
+    }
+
+    /** Default constructor. **/
+    public UpdaterDialog(String contentProvider) {
+        setRetainInstance(true);
+        this.contentProvider = contentProvider;
     }
 
     //****** Start of overridden functions ******//
@@ -53,10 +62,6 @@ public class UpdaterDialog extends DialogFragment {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         this.dialog = createDialog();
-        if (notification != null) {
-            NotificationManagerCompat manager = NotificationManagerCompat.from(requireContext());
-            manager.notify(requireActivity().getTaskId(), notification);
-        }
     }
 
     /** Dismiss the dialog if the last one is still showing and the dialog is not rotatable. **/
@@ -68,7 +73,8 @@ public class UpdaterDialog extends DialogFragment {
         super.onStart();
     }
 
-    /** Returns the set dialog. **/
+    /** Returns the set dialog.
+     * The dialog should not be overwritten here, but instead in createDialog. **/
     @NonNull
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
@@ -89,7 +95,9 @@ public class UpdaterDialog extends DialogFragment {
        } else {
            builder.setMessage(updateMessage.replaceAll(Template.RELEASE_INFO, releaseInfo)
                    .replaceAll(Template.DOWNLOAD_URL, downloadLink)
-                   .replaceAll(Template.LEARN_MORE_URL, learnMoreUrl));
+                   .replaceAll(Template.LEARN_MORE_URL, learnMoreUrl)
+                   .replaceAll(Template.CURRENT_VERSION, currentVersion)
+                   .replaceAll(Template.NEW_VERSION, newVersion));
        }
        if (showLearnMore) {
            // Set the neutral button to open an external URL when clicked
@@ -101,6 +109,15 @@ public class UpdaterDialog extends DialogFragment {
                }
            });
        }
+       builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+           @Override
+           public void onClick(DialogInterface dialog, int which) {
+               dialog.dismiss();
+               APKDownloader downloader = new APKDownloader(requireContext(), getFragmentManager(), downloadLink, contentProvider);
+               downloader.setShowDownloadDialog(showDownloadingDialog);
+               downloader.start();
+           }
+       });
        builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
            @Override
            public void onClick(DialogInterface dialog, int which) {
@@ -126,10 +143,9 @@ public class UpdaterDialog extends DialogFragment {
         this.downloadLink = link;
     }
 
-    /** Sets the notification that would be shown when onCreate is called.
-     * This function does not need to be called manually. **/
-    public void setNotification(Notification notification) {
-        this.notification = notification;
+    /** Sets whether the Downloading... dialog would be shown. **/
+    public void setShowDownloadingDialog(boolean showDialog) {
+        this.showDownloadingDialog = showDialog;
     }
 
     /** Sets the update message for the app. Certain templates can be used.
@@ -162,10 +178,22 @@ public class UpdaterDialog extends DialogFragment {
         this.learnMoreUrl = url;
     }
 
-    /** Message templates that will be replaced with specific values in the  **/
+    /** Sets the current version of the app. This is only used as the value for Template.CURRENT_VERSION. **/
+    public void setCurrentVersion(String currentVersion) {
+        this.currentVersion = currentVersion;
+    }
+
+    /** Sets the newer version of the app. This is only used as the value for Template.NEW_VERSION. **/
+    public void setNewVersion(String newVersion) {
+        this.newVersion = newVersion;
+    }
+
+    /** Message templates that will be replaced with specific values in the message section of the dialog. **/
     public static class Template {
         public static final String RELEASE_INFO = "\\$\\{releaseInfo}";
         public static final String DOWNLOAD_URL = "\\$\\{downloadUrl}";
         public static final String LEARN_MORE_URL = "\\$\\{learnMoreUrl}";
+        public static final String CURRENT_VERSION = "\\$\\{currentVersion}";
+        public static final String NEW_VERSION = "\\$\\{newVersion}";
     }
 }

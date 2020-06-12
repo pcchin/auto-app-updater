@@ -18,7 +18,7 @@ import androidx.fragment.app.FragmentManager;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
-import com.pcchin.auto_app_updater.UpdaterDialog;
+import com.pcchin.auto_app_updater.dialogs.UpdaterDialog;
 
 /** The endpoint used to get the updater service. **/
 public abstract class Endpoint {
@@ -34,7 +34,7 @@ public abstract class Endpoint {
     protected int currentVersionInt;
     protected float currentVersionDecimal;
 
-    /** The constructor for the endpoint. **/
+    /** The constructor for the endpoint. Should not be used. **/
     public Endpoint() {
         this.updateDialog = new UpdaterDialog();
     }
@@ -72,6 +72,12 @@ public abstract class Endpoint {
         this.currentVersionDecimal = version;
     }
 
+    /** Sets the content provider which is required to get the files.
+     * This function does not needed to be called manually. **/
+    public void setContentProvider(String provider) {
+        this.updateDialog = new UpdaterDialog(provider);
+    }
+
     /** Sets the current queue for the request.
      * This function does not need to be called manually. **/
     public void setRequestQueue(RequestQueue queue) {
@@ -93,6 +99,8 @@ public abstract class Endpoint {
      * This function would only be called if the update type is UPDATE_TYPE.DIFFERENCE. **/
     public void onSuccess(@NonNull String version, @NonNull String downloadLink) {
         if (!version.equals(currentVersionStr)) {
+            updateDialog.setCurrentVersion(currentVersionStr);
+            updateDialog.setNewVersion(version);
             updateApp(downloadLink);
         }
     }
@@ -101,6 +109,8 @@ public abstract class Endpoint {
      * This function would only be called if the update type is UPDATE_TYPE.INCREMENTAL. **/
     public void onSuccess(int version, @NonNull String downloadLink) {
         if (version > currentVersionInt) {
+            updateDialog.setCurrentVersion(String.valueOf(version));
+            updateDialog.setNewVersion(String.valueOf(version));
             updateApp(downloadLink);
         }
     }
@@ -109,6 +119,8 @@ public abstract class Endpoint {
      * This function would only be called if the update type is UPDATE_TYPE.INCREMENTAL. **/
     public void onSuccess(float version, @NonNull String downloadLink) {
         if (version > currentVersionDecimal) {
+            updateDialog.setCurrentVersion(String.valueOf(version));
+            updateDialog.setNewVersion(String.valueOf(version));
             updateApp(downloadLink);
         }
     }
