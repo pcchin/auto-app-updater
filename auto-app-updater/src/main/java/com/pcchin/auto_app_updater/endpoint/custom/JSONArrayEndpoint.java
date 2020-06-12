@@ -130,11 +130,11 @@ public class JSONArrayEndpoint extends Endpoint {
         String downloadUrl = firstObject.getString(downloadUrlAttribute);
         String learnMoreUrl = null;
         if (learnMoreAttribute != null) learnMoreUrl = firstObject.getString(learnMoreAttribute);
-        if (super.updateType == AutoAppUpdater.UPDATE_TYPE.DIFFERENCE) {
+        if (super.updateType == AutoAppUpdater.UpdateType.DIFFERENCE) {
             String version = firstObject.getString(versionAttribute);
             if (learnMoreUrl == null) onSuccess(version, downloadUrl);
             else onSuccess(version, downloadUrl, learnMoreUrl);
-        } else if (super.updateType == AutoAppUpdater.UPDATE_TYPE.INCREMENTAL) {
+        } else if (super.updateType == AutoAppUpdater.UpdateType.INCREMENTAL) {
             int version = firstObject.getInt(versionAttribute);
             if (learnMoreUrl == null) onSuccess(version, downloadUrl);
             else onSuccess(version, downloadUrl, learnMoreUrl);

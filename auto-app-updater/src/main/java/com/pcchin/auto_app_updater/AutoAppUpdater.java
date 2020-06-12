@@ -40,7 +40,7 @@ public class AutoAppUpdater {
     private List<Endpoint> endpointList; // All the possible endpoints for updating the app.
 
     // The type of update checks that will be performed
-    public enum UPDATE_TYPE {
+    public enum UpdateType {
         // As long as the version provided differs from the current version, a version update would be needed.
         DIFFERENCE,
         // The version provided will be a number, and if the number is larger than the current one,
@@ -92,14 +92,14 @@ public class AutoAppUpdater {
 
     /** The builder class for creating the AutoAppUpdater.
      * The order of method calls should be
-     * setUpdateType -> setCurrentVersion -> setNotifChannel (If needed) -> setUpdateDialog -> addEndpoint / addEndpoints. **/
+     * setUpdateType -> setCurrentVersion -> setUpdateDialog -> addEndpoint / addEndpoints. **/
     public static class Builder {
         private Context bContext;
         private FragmentManager bFragmentManager;
         private String bFragmentTag; // The tag of the fragment that would be shown, defaults, to "AutoAppUpdater".
 
         private String bContentProvider; // The content provider that will open the APK file needed to install it.
-        private UPDATE_TYPE bUpdateType; // The update type of the app, defaults to UPDATE_TYPE.DIFFERENCE.
+        private UpdateType bUpdateType; // The update type of the app, defaults to UpdateType.DIFFERENCE.
         private int bUpdateInterval; // The interval between updating the app (In seconds), defaults to 86400 (One day).
         private List<Endpoint> bEndpointList = new ArrayList<>();
         private UpdaterDialog bUpdateDialog; // Defaults to UpdaterDialog without any additional arguments.
@@ -120,7 +120,7 @@ public class AutoAppUpdater {
          * The default values for variables are set here. **/
         public Builder(@NonNull Context context, @NonNull FragmentManager manager, String tag, String contentProvider) {
             this.bContext = context;
-            this.bUpdateType = UPDATE_TYPE.DIFFERENCE;
+            this.bUpdateType = UpdateType.DIFFERENCE;
             this.bFragmentTag = tag;
             this.bUpdateInterval = 60 * 60 * 24;
             this.bUpdateDialog = new UpdaterDialog(contentProvider);
@@ -130,8 +130,8 @@ public class AutoAppUpdater {
         }
 
         /** Sets the update type of the updater.
-         * If a type is not set, it is assumed to be UPDATE_TYPE.DIFFERENCE. **/
-        public Builder setUpdateType(UPDATE_TYPE type) {
+         * If a type is not set, it is assumed to be UpdateType.DIFFERENCE. **/
+        public Builder setUpdateType(UpdateType type) {
             this.bUpdateType = type;
             return this;
         }
@@ -149,36 +149,36 @@ public class AutoAppUpdater {
         }
 
         /** Sets the current version of the app.
-         * This should be used in conjunction with UPDATE_TYPE.DIFFERENCE
+         * This should be used in conjunction with UpdateType.DIFFERENCE
          * and should be used after setUpdateType is called. **/
         public Builder setCurrentVersion(@NonNull String version) {
-            if (bUpdateType != UPDATE_TYPE.DIFFERENCE) {
+            if (bUpdateType != UpdateType.DIFFERENCE) {
                 throw new IllegalStateException(String.format("Incorrect update type set, expected" +
-                        " UPDATE_TYPE.DIFFERENCE but got %s", bUpdateType));
+                        " UpdateType.DIFFERENCE but got %s", bUpdateType));
             }
             this.bCurrentVersionStr = version;
             return this;
         }
 
         /** Sets the current version of the app.
-         * This should be used in conjunction with UPDATE_TYPE.INCREMENTAL
+         * This should be used in conjunction with UpdateType.INCREMENTAL
          * and should be used after setUpdateType is called. **/
         public Builder setCurrentVersion(int version) {
-            if (bUpdateType != UPDATE_TYPE.INCREMENTAL) {
+            if (bUpdateType != UpdateType.INCREMENTAL) {
                 throw new IllegalStateException(String.format("Incorrect update type set, expected" +
-                        " UPDATE_TYPE.INCREMENTAL but got %s", bUpdateType));
+                        " UpdateType.INCREMENTAL but got %s", bUpdateType));
             }
             this.bCurrentVersionInt = version;
             return this;
         }
 
         /** Sets the current version of the app.
-         * This should be used in conjunction with UPDATE_TYPE.DECIMAL_INCREMENTAL
+         * This should be used in conjunction with UpdateType.DECIMAL_INCREMENTAL
          * and should be used after setUpdateType is called. **/
         public Builder setCurrentVersion(float version) {
-            if (bUpdateType != UPDATE_TYPE.DECIMAL_INCREMENTAL) {
+            if (bUpdateType != UpdateType.DECIMAL_INCREMENTAL) {
                 throw new IllegalStateException(String.format("Incorrect update type set, expected" +
-                        " UPDATE_TYPE.DECIMAL_INCREMENTAL but got %s", bUpdateType));
+                        " UpdateType.DECIMAL_INCREMENTAL but got %s", bUpdateType));
             }
             this.bCurrentVersionDecimal = version;
             return this;
@@ -233,9 +233,9 @@ public class AutoAppUpdater {
         private void setEndpointProperties(@NonNull Endpoint endpoint) {
             endpoint.setContentProvider(bContentProvider);
             endpoint.setUpdateDialog(bUpdateDialog, bFragmentManager, bFragmentTag);
-            if (bUpdateType == UPDATE_TYPE.DIFFERENCE) {
+            if (bUpdateType == UpdateType.DIFFERENCE) {
                 endpoint.setCurrentVersion(bCurrentVersionStr);
-            } else if (bUpdateType == UPDATE_TYPE.INCREMENTAL) {
+            } else if (bUpdateType == UpdateType.INCREMENTAL) {
                 endpoint.setCurrentVersion(bCurrentVersionInt);
             } else {
                 endpoint.setCurrentVersion(bCurrentVersionDecimal);

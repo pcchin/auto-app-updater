@@ -121,11 +121,11 @@ public class JSONObjectEndpoint extends Endpoint {
         String downloadUrl = response.getString(downloadUrlAttribute);
         String learnMoreUrl = null;
         if (learnMoreAttribute != null) learnMoreUrl = response.getString(learnMoreAttribute);
-        if (super.updateType == AutoAppUpdater.UPDATE_TYPE.DIFFERENCE) {
+        if (super.updateType == AutoAppUpdater.UpdateType.DIFFERENCE) {
             String version = response.getString(versionAttribute);
             if (learnMoreUrl == null) onSuccess(version, downloadUrl);
             else onSuccess(version, downloadUrl, learnMoreUrl);
-        } else if (super.updateType == AutoAppUpdater.UPDATE_TYPE.INCREMENTAL) {
+        } else if (super.updateType == AutoAppUpdater.UpdateType.INCREMENTAL) {
             int version = response.getInt(versionAttribute);
             if (learnMoreUrl == null) onSuccess(version, downloadUrl);
             else onSuccess(version, downloadUrl, learnMoreUrl);

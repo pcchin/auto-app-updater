@@ -16,7 +16,18 @@ package com.pcchin.auto_app_updater.endpoint.repo;
 import com.android.volley.Request;
 import com.pcchin.auto_app_updater.endpoint.Endpoint;
 
+/** Sets the GitLab endpoint for the app. **/
 public class GitLabEndpoint extends Endpoint {
+    /** Methods of authenticating with the GitLab API.
+     * None: No authentication
+     * OAUTH2: OAuth2 token
+     * PRIVATE_TOKEN: Personal / project access tokens **/
+    public enum GitLabAuth {
+        NONE,
+        OAUTH2,
+        PRIVATE_TOKEN
+    }
+
     public GitLabEndpoint() {
         super();
     }

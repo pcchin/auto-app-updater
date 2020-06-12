@@ -33,7 +33,7 @@ public abstract class Endpoint {
 
     // The endpoint that will be called if this endpoint fails.
     protected Endpoint backupEndpoint;
-    protected AutoAppUpdater.UPDATE_TYPE updateType;
+    protected AutoAppUpdater.UpdateType updateType;
     protected UpdaterDialog updateDialog;
     protected FragmentManager manager;
     protected String tag;
@@ -67,21 +67,21 @@ public abstract class Endpoint {
     /** Sets the current version of the app from within AutoAppUpdater.
      * This function does not need to be called manually. **/
     public void setCurrentVersion(String version) {
-        this.updateType = AutoAppUpdater.UPDATE_TYPE.DIFFERENCE;
+        this.updateType = AutoAppUpdater.UpdateType.DIFFERENCE;
         this.currentVersionStr = version;
     }
 
     /** Sets the current version of the app from within AutoAppUpdater.
      * This function does not need to be called manually. **/
     public void setCurrentVersion(int version) {
-        this.updateType = AutoAppUpdater.UPDATE_TYPE.INCREMENTAL;
+        this.updateType = AutoAppUpdater.UpdateType.INCREMENTAL;
         this.currentVersionInt = version;
     }
 
     /** Sets the current version of the app from within AutoAppUpdater.
      * This function does not need to be called manually. **/
     public void setCurrentVersion(float version) {
-        this.updateType = AutoAppUpdater.UPDATE_TYPE.DECIMAL_INCREMENTAL;
+        this.updateType = AutoAppUpdater.UpdateType.DECIMAL_INCREMENTAL;
         this.currentVersionDecimal = version;
     }
 
@@ -110,7 +110,7 @@ public abstract class Endpoint {
     public abstract Request<?> getRequest();
 
     /** The function that is called if the latest version is able to be successfully retrieved.
-     * This function would only be called if the update type is UPDATE_TYPE.DIFFERENCE. **/
+     * This function would only be called if the update type is UpdateType.DIFFERENCE. **/
     public void onSuccess(@NonNull String version, @NonNull String downloadLink) {
         if (!version.equals(currentVersionStr)) {
             updateDialog.setCurrentVersion(currentVersionStr);
@@ -120,7 +120,7 @@ public abstract class Endpoint {
     }
 
     /** The function that is called if the latest version is able to be successfully retrieved.
-     * This function would only be called if the update type is UPDATE_TYPE.DIFFERENCE.
+     * This function would only be called if the update type is UpdateType.DIFFERENCE.
      * The 'Learn More' button would be enabled. **/
     public void onSuccess(@NonNull String version, @NonNull String downloadLink, String learnMoreLink) {
         setUpdateDialogLearnMore(learnMoreLink);
@@ -128,7 +128,7 @@ public abstract class Endpoint {
     }
 
     /** The function that is called if the latest version is able to be successfully retrieved.
-     * This function would only be called if the update type is UPDATE_TYPE.INCREMENTAL. **/
+     * This function would only be called if the update type is UpdateType.INCREMENTAL. **/
     public void onSuccess(int version, @NonNull String downloadLink) {
         if (version > currentVersionInt) {
             updateDialog.setCurrentVersion(String.valueOf(version));
@@ -138,7 +138,7 @@ public abstract class Endpoint {
     }
 
     /** The function that is called if the latest version is able to be successfully retrieved.
-     * This function would only be called if the update type is UPDATE_TYPE.INCREMENTAL.
+     * This function would only be called if the update type is UpdateType.INCREMENTAL.
      * The 'Learn More' button would be enabled.**/
     public void onSuccess(int version, @NonNull String downloadLink, String learnMoreLink) {
         setUpdateDialogLearnMore(learnMoreLink);
@@ -146,7 +146,7 @@ public abstract class Endpoint {
     }
 
     /** The function that is called if the latest version is able to be successfully retrieved.
-     * This function would only be called if the update type is UPDATE_TYPE.INCREMENTAL. **/
+     * This function would only be called if the update type is UpdateType.INCREMENTAL. **/
     public void onSuccess(float version, @NonNull String downloadLink) {
         if (version > currentVersionDecimal) {
             updateDialog.setCurrentVersion(String.valueOf(version));
@@ -156,7 +156,7 @@ public abstract class Endpoint {
     }
 
     /** The function that is called if the latest version is able to be successfully retrieved.
-     * This function would only be called if the update type is UPDATE_TYPE.INCREMENTAL.
+     * This function would only be called if the update type is UpdateType.INCREMENTAL.
      * The 'Learn More' button would be enabled.**/
     public void onSuccess(float version, @NonNull String downloadLink, String learnMoreLink) {
         setUpdateDialogLearnMore(learnMoreLink);

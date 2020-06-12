@@ -25,7 +25,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         AutoAppUpdater updater = new AutoAppUpdater.Builder(MainActivity.this, getSupportFragmentManager(), getPackageName() + ".ContentProvider")
-                .setUpdateType(AutoAppUpdater.UPDATE_TYPE.DIFFERENCE)
+                .setUpdateType(AutoAppUpdater.UpdateType.DIFFERENCE)
                 .create();
         updater.run();
     }

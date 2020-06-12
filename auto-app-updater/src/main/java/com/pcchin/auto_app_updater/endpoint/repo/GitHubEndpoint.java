@@ -36,12 +36,12 @@ import java.util.Map;
 /** Sets the GitHub endpoint for the app.
  * The tag_name of the release will be used as the newer version
  * and the first APK file in that release will be the assets.
- * If the update type is UPDATE_TYPE.INCREMENTAL, tag_name must be an integer.
- * If the update type is UPDATE_TYPE.DECIMAL_INCREMENTAL, tag_name must be a valid number. **/
+ * If the update type is UpdateType.INCREMENTAL, tag_name must be an integer.
+ * If the update type is UpdateType.DECIMAL_INCREMENTAL, tag_name must be a valid number. **/
 public class GitHubEndpoint extends Endpoint {
     private String repoPath;
-    private boolean includePreReleases;
     private String apiPath;
+    private boolean includePreReleases;
     private String oAuthToken;
     private String userAgent = Endpoint.USER_AGENT;
 
@@ -91,6 +91,8 @@ public class GitHubEndpoint extends Endpoint {
         }
     }
 
+    //****** Start of custom functions ******/
+
     /** Gets the pre releases from /repos/.../releases. **/
     @NonNull
     private JsonArrayRequest getPreReleaseRequest() {
@@ -123,10 +125,7 @@ public class GitHubEndpoint extends Endpoint {
         }) {
             @Override
             public Map<String, String> getHeaders() {
-                Map<String, String> headers = new HashMap<>();
-                if (oAuthToken != null) headers.put("Authorization", String.format("token %s", oAuthToken));
-                headers.put("User-agent", userAgent);
-                return headers;
+                return getGitHubHeaders();
             }
 
             @Override
@@ -144,12 +143,15 @@ public class GitHubEndpoint extends Endpoint {
         JSONObject targetObject = null;
         for (int i = 0; i < response.length(); i++) {
             JSONObject currentRelease = response.getJSONObject(i);
-            boolean isPreRelease = currentRelease.getBoolean("prerelease");
-            if (isPreRelease) {
-                targetObject = currentRelease;
-                break;
-            } else if (firstStableRelease == null) {
-                firstStableRelease = i;
+            boolean isPreRelease = currentRelease.getBoolean("prerelease"),
+                    isDraft = currentRelease.getBoolean("draft");
+            if (!isDraft) {
+                if (isPreRelease) {
+                    targetObject = currentRelease;
+                    break;
+                } else if (firstStableRelease == null) {
+                    firstStableRelease = i;
+                }
             }
         }
         if (targetObject == null && firstStableRelease != null) targetObject = response.getJSONObject(firstStableRelease);
@@ -192,10 +194,7 @@ public class GitHubEndpoint extends Endpoint {
         }) {
             @Override
             public Map<String, String> getHeaders() {
-                Map<String, String> headers = new HashMap<>();
-                if (oAuthToken != null) headers.put("Authorization", String.format("token %s", oAuthToken));
-                headers.put("User-agent", userAgent);
-                return headers;
+                return getGitHubHeaders();
             }
 
             @Override
@@ -218,12 +217,19 @@ public class GitHubEndpoint extends Endpoint {
             }
         }
         if (downloadLink == null) throw new IllegalStateException("Asset download link not found in GitHub release!");
-        if (super.updateType == AutoAppUpdater.UPDATE_TYPE.DIFFERENCE) onSuccess(versionTag, downloadLink);
-        else if (super.updateType == AutoAppUpdater.UPDATE_TYPE.INCREMENTAL) onSuccess(Integer.parseInt(versionTag), downloadLink);
+        if (super.updateType == AutoAppUpdater.UpdateType.DIFFERENCE) onSuccess(versionTag, downloadLink);
+        else if (super.updateType == AutoAppUpdater.UpdateType.INCREMENTAL) onSuccess(Integer.parseInt(versionTag), downloadLink);
         else onSuccess(Float.parseFloat(versionTag), downloadLink);
     }
 
-    //****** Start of getters and setters ******/
+    /** Gets the GitHub headers needed for the requests. **/
+    @NonNull
+    private Map<String, String> getGitHubHeaders() {
+        Map<String, String> headers = new HashMap<>();
+        if (oAuthToken != null) headers.put("Authorization", String.format("token %s", oAuthToken));
+        headers.put("User-agent", userAgent);
+        return headers;
+    }
 
     /** Sets the user agent for the request. Defaults to Endpoint.USER_AGENT. **/
     public void setUserAgent(String userAgent) {
