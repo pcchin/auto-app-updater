@@ -74,16 +74,18 @@ public class AutoAppUpdater {
 
     /** Starts the update checking process. **/
     public void run() {
-        SharedPreferences sharedPref = context.getSharedPreferences("com.pcchin.auto_app_updater", Context.MODE_PRIVATE);
-        long lastRunTime = sharedPref.getLong("lastRunTime", 0);
-        if (((new Date().getTime() - lastRunTime) / 1000) >= updateInterval) {
-            // Update the shared preferences
-            SharedPreferences.Editor editor = sharedPref.edit();
-            editor.putLong("lastRunTime", lastRunTime);
-            editor.apply();
+        if (UpdaterFunctions.isConnected(context)) {
+            SharedPreferences sharedPref = context.getSharedPreferences("com.pcchin.auto_app_updater", Context.MODE_PRIVATE);
+            long lastRunTime = sharedPref.getLong("lastRunTime", 0);
+            if (((new Date().getTime() - lastRunTime) / 1000) >= updateInterval) {
+                // Update the shared preferences
+                SharedPreferences.Editor editor = sharedPref.edit();
+                editor.putLong("lastRunTime", lastRunTime);
+                editor.apply();
 
-            if (endpointList.size() > 0) {
-                endpointList.get(0).update();
+                if (endpointList.size() > 0) {
+                    endpointList.get(0).update();
+                }
             }
         }
     }

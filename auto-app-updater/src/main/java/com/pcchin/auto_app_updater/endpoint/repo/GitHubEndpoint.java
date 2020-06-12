@@ -13,16 +13,220 @@
 
 package com.pcchin.auto_app_updater.endpoint.repo;
 
+import android.util.Log;
+
+import androidx.annotation.NonNull;
+
+import com.android.volley.NetworkResponse;
 import com.android.volley.Request;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonArrayRequest;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.pcchin.auto_app_updater.AutoAppUpdater;
 import com.pcchin.auto_app_updater.endpoint.Endpoint;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.HashMap;
+import java.util.Map;
+
+/** Sets the GitHub endpoint for the app.
+ * The tag_name of the release will be used as the newer version
+ * and the first APK file in that release will be the assets.
+ * If the update type is UPDATE_TYPE.INCREMENTAL, tag_name must be an integer.
+ * If the update type is UPDATE_TYPE.DECIMAL_INCREMENTAL, tag_name must be a valid number. **/
 public class GitHubEndpoint extends Endpoint {
-    public GitHubEndpoint() {
-        super();
+    private String repoPath;
+    private boolean includePreReleases;
+    private String apiPath;
+    private String oAuthToken;
+    private String userAgent = Endpoint.USER_AGENT;
+
+    //****** Start of constructors ******//
+
+    /** Default constructor with the repo path and whether to include pre-releases specified.
+     * The API path is assumed to be https://api.github.com and no OAuth2 token will be used.
+     * @param repoPath The path for the repository in the form of user/repo.
+     * @param includePreReleases Whether to include pre releases in the version check. **/
+    public GitHubEndpoint(String repoPath, boolean includePreReleases) {
+        this(repoPath, includePreReleases, "https://api.github.com");
     }
 
+    /** Default constructor with the repo path and whether to include pre-releases specified.
+     * No OAuth2 token will be used.
+     * @param repoPath The path for the repository in the form of user/repo.
+     * @param includePreReleases Whether to include pre releases in the version check.
+     * @param apiPath The path to access the API (Include https:// and without / at the end). **/
+    public GitHubEndpoint(String repoPath, boolean includePreReleases, String apiPath) {
+        this(repoPath, includePreReleases, apiPath, null);
+    }
+
+    /** Default constructor with the repo path and whether to include pre-releases specified.
+     * The API path is assumed to be api.github.com and no OAuth2 token will be used.
+     * @param repoPath The path for the repository in the form of user/repo.
+     * @param includePreReleases Whether to include pre releases in the version check.
+     * @param apiPath The path to access the API (Include https:// and without / at the end).
+     * @param oAuthToken The oAuth2 token to access the repo. (Only use this if you can ensure that your token would not be leaked) **/
+    public GitHubEndpoint(String repoPath, boolean includePreReleases, String apiPath, String oAuthToken) {
+        super();
+        this.repoPath = repoPath;
+        this.includePreReleases = includePreReleases;
+        this.apiPath = apiPath;
+        this.oAuthToken = oAuthToken;
+    }
+
+    //****** Start of overridden functions ******//
+
+    /** Get the request needed to get the latest APK. If the version list includes pre releases,
+     * a JsonArrayRequest would be returned. Otherwise, a JsonObjectRequest would be returned. **/
     @Override
     public Request<?> getRequest() {
-        return null;
+        if (includePreReleases) {
+            return getPreReleaseRequest();
+        } else {
+            return getStableRequest();
+        }
+    }
+
+    /** Gets the pre releases from /repos/.../releases. **/
+    @NonNull
+    private JsonArrayRequest getPreReleaseRequest() {
+        return new JsonArrayRequest(Request.Method.GET, String.format("%s/repos/%s/releases",
+                apiPath, repoPath), null, new Response.Listener<JSONArray>() {
+            @Override
+            public void onResponse(JSONArray response) {
+                try {
+                    parseReleaseList(response);
+                } catch (JSONException e) {
+                    Log.w("GitHubEndpoint", "Unable to get attributes from JSON response, stack trace is");
+                    e.printStackTrace();
+                    onFailure(e);
+                } catch (NumberFormatException e) {
+                    Log.w("GitHubEndpoint", "Unable to parse version tag to either an int or a float, stack trace is");
+                    e.printStackTrace();
+                    onFailure(e);
+                } catch (IllegalStateException e) {
+                    Log.w("GitHubEndpoint", String.format("%s", e.getMessage()));
+                    e.printStackTrace();
+                    onFailure(e);
+                }
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                // Forwards the error on
+                onFailure(error);
+            }
+        }) {
+            @Override
+            public Map<String, String> getHeaders() {
+                Map<String, String> headers = new HashMap<>();
+                if (oAuthToken != null) headers.put("Authorization", String.format("token %s", oAuthToken));
+                headers.put("User-agent", userAgent);
+                return headers;
+            }
+
+            @Override
+            protected Response<JSONArray> parseNetworkResponse(@NonNull NetworkResponse response) {
+                return super.parseNetworkResponse(response);
+            }
+        };
+    }
+
+    /** Parses the releases list to get the latest pre release.
+     * If none can be found, the first stable release would be parsed;
+     * and if there are no releases, the function would throw an IllegalStateException. **/
+    private void parseReleaseList(@NonNull JSONArray response) throws JSONException, NumberFormatException, IllegalStateException {
+        Integer firstStableRelease = null; // Fallback if there are no pre releases
+        JSONObject targetObject = null;
+        for (int i = 0; i < response.length(); i++) {
+            JSONObject currentRelease = response.getJSONObject(i);
+            boolean isPreRelease = currentRelease.getBoolean("prerelease");
+            if (isPreRelease) {
+                targetObject = currentRelease;
+                break;
+            } else if (firstStableRelease == null) {
+                firstStableRelease = i;
+            }
+        }
+        if (targetObject == null && firstStableRelease != null) targetObject = response.getJSONObject(firstStableRelease);
+        if (targetObject == null) {
+            throw new IllegalStateException("Asset download link not found in GitHub release!");
+        } else {
+            parseRelease(targetObject);
+        }
+    }
+
+    /** Gets the latest stable release from /repos/.../releases/latest. **/
+    @NonNull
+    private JsonObjectRequest getStableRequest() {
+        return new JsonObjectRequest(String.format("%s/repos/%s/releases/latest", apiPath, repoPath),
+                null, new Response.Listener<JSONObject>() {
+            @Override
+            public void onResponse(JSONObject response) {
+                try {
+                    parseRelease(response);
+                } catch (JSONException e) {
+                    Log.w("GitHubEndpoint", "Unable to get attributes from JSON response, stack trace is");
+                    e.printStackTrace();
+                    onFailure(e);
+                } catch (NumberFormatException e) {
+                    Log.w("GitHubEndpoint", "Unable to parse version tag to either an int or a float, stack trace is");
+                    e.printStackTrace();
+                    onFailure(e);
+                } catch (IllegalStateException e) {
+                    Log.w("GitHubEndpoint", String.format("%s", e.getMessage()));
+                    e.printStackTrace();
+                    onFailure(e);
+                }
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                // Forwards the error on
+                onFailure(error);
+            }
+        }) {
+            @Override
+            public Map<String, String> getHeaders() {
+                Map<String, String> headers = new HashMap<>();
+                if (oAuthToken != null) headers.put("Authorization", String.format("token %s", oAuthToken));
+                headers.put("User-agent", userAgent);
+                return headers;
+            }
+
+            @Override
+            protected Response<JSONObject> parseNetworkResponse(@NonNull NetworkResponse response) {
+                return super.parseNetworkResponse(response);
+            }
+        };
+    }
+
+    /** Parses a specific release to get the version and download info. **/
+    private void parseRelease(@NonNull JSONObject response) throws JSONException, NumberFormatException, IllegalStateException {
+        String versionTag = response.getString("tag_name");
+        String downloadLink = null;
+        JSONArray assetsList = response.getJSONArray("assets");
+        for (int i = 0; i < assetsList.length(); i++) {
+            JSONObject currentObject = assetsList.getJSONObject(i);
+            String assetType = currentObject.getString("content_type");
+            if (assetType.equals("application/vnd.android.package-archive")) {
+                downloadLink = currentObject.getString("browser_download_url");
+            }
+        }
+        if (downloadLink == null) throw new IllegalStateException("Asset download link not found in GitHub release!");
+        if (super.updateType == AutoAppUpdater.UPDATE_TYPE.DIFFERENCE) onSuccess(versionTag, downloadLink);
+        else if (super.updateType == AutoAppUpdater.UPDATE_TYPE.INCREMENTAL) onSuccess(Integer.parseInt(versionTag), downloadLink);
+        else onSuccess(Float.parseFloat(versionTag), downloadLink);
+    }
+
+    //****** Start of getters and setters ******/
+
+    /** Sets the user agent for the request. Defaults to Endpoint.USER_AGENT. **/
+    public void setUserAgent(String userAgent) {
+        this.userAgent = userAgent;
     }
 }
