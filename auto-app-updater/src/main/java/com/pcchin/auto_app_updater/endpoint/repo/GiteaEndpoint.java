@@ -75,7 +75,6 @@ public class GiteaEndpoint extends Endpoint {
     }
 
     /** Default constructor with the repo path and whether to include pre-releases specified.
-     * The API path is assumed to be api.github.com and no OAuth2 token will be used.
      * @param repoPath The path for the repository in the form of user/repo.
      * @param includePreReleases Whether to include pre releases in the version check.
      * @param apiPath The path to access the API (Include https:// and without / at the end).
@@ -181,7 +180,7 @@ public class GiteaEndpoint extends Endpoint {
         else onSuccess(Float.parseFloat(versionTag), downloadLink);
     }
 
-    //****** Start of custom functions ******/
+    //****** Start of custom functions ******//
 
     /** Gets the Gitea headers needed for the requests. **/
     @NonNull
