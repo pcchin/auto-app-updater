@@ -15,7 +15,8 @@ package com.pcchin.aausample.testing;
 
 import android.content.Context;
 
-/** Tests to see if the Gitea endpoint performs as expected. **/
+/** Tests to see if the Gitea endpoint performs as expected.
+ * The tests can't be put in androidTest as listeners are needed to be used. **/
 public class GiteaEndpointTest {
     private Context context;
 

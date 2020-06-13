@@ -115,7 +115,8 @@ public class APKDownloader {
 
     //****** Start of getters and setters ******//
 
-    /** Sets whether to show the Downloading... dialog, defaults to true. **/
+    /** Sets whether to show the Downloading... dialog, defaults to true.
+     * @param showDialog Whether to show the Downloading... dialog. **/
     public void setShowDownloadDialog(boolean showDialog) {
         this.showDownloadDialog = showDialog;
     }
@@ -136,7 +137,9 @@ public class APKDownloader {
     }
 
     /** Gets the listener that is called when the file is successfully downloaded.
-     * Override this function if you wish to install the file manually. **/
+     * Override this function if you wish to install the file manually.
+     * @param downloadUrl The download URL for the APK.
+     * @param dlPath The path that the APK will be downloaded to. **/
     public Response.Listener<byte[]> getResponseListener(final String downloadUrl, final String dlPath) {
         return new Response.Listener<byte[]>() {
             @Override
@@ -148,7 +151,9 @@ public class APKDownloader {
         };
     }
 
-    /** The try / catch blocks for createApk. **/
+    /** The try / catch blocks for createApk.
+     * @param response The binary representation of the APK.
+     * @param dlPath The path that the APK will be downloaded to. **/
     private void tryCreateApk(byte[] response, String dlPath) {
         try {
             createApk(response, dlPath);
@@ -167,7 +172,9 @@ public class APKDownloader {
         }
     }
 
-    /** Creates and install the APK for the app. **/
+    /** Creates and install the APK for the app.
+     * @param response The binary representation of the APK.
+     * @param dlPath The path that the APK will be downloaded to. **/
     private void createApk(byte[] response, String dlPath) throws IOException {
         if (response != null) {
             File outputFile = new File(dlPath);
@@ -180,10 +187,12 @@ public class APKDownloader {
         }
     }
 
-    /** Writes the downloaded APK into the file. **/
+    /** Writes the downloaded APK into the file.
+     * @param response The binary representation of the APK.
+     * @param outputFile The output file for the APK. **/
     private void writeApk(byte[] response, @NonNull File outputFile) throws IOException {
         SharedPreferences sharedPref = context.getSharedPreferences("com.pcchin.auto_app_updater", Context.MODE_PRIVATE);
-        Set<String> apkList = UpdaterFunctions.getStringSet(sharedPref);
+        Set<String> apkList = UpdaterFunctions.getApkStringSet(sharedPref);
         apkList.add(outputFile.getAbsolutePath());
         SharedPreferences.Editor editor = sharedPref.edit();
         editor.putStringSet("previousApkList", apkList);
@@ -209,7 +218,8 @@ public class APKDownloader {
         }
     }
 
-    /** Installs the new app from the given file path. **/
+    /** Installs the new app from the given file path.
+     * @param outputFile The APK file that was just downloaded. **/
     private void installApp(File outputFile) {
         Toast.makeText(context, "Updating file...", Toast.LENGTH_SHORT).show();
         Intent installIntent = new Intent(Intent.ACTION_VIEW);
@@ -220,7 +230,8 @@ public class APKDownloader {
     }
 
     /** Gets the listener that is called when an error occurs during the process of downloading the file.
-     * Override this function if you wish to install the file manually. **/
+     * Override this function if you wish to handle the error manually.
+     * @param downloadUrl The URL that was given to download the APK. **/
     @NonNull
     public Response.ErrorListener getResponseErrorListener(final String downloadUrl) {
         return new Response.ErrorListener() {
@@ -235,14 +246,19 @@ public class APKDownloader {
     }
 
     /** Gets the Downloading... dialog.
-     * Override this function if you wish to display your own custom Downloading... dialog **/
+     * Override this function if you wish to display your own custom Downloading... dialog
+     * @param request The request that is used to get the APK file. **/
     @SuppressWarnings("unused")
     public DialogFragment getDownloadDialog(Request<byte[]> request) {
         return new ProgressBarDialog();
     }
 
     /** Creates the Volley request required to download the URL.
-     * Override this function to set your own download request based on the download URL given. **/
+     * Override this function to set your own download request based on the download URL given.
+     * @param downloadUrl The URL that the APK will be downloaded from.
+     * @param response The listener that will be called to handle the downloaded file.
+     * @param errorListener The listener that will be called when the request fails with an error.
+     * @param params The header info that will be used while sending the request. **/
     public Request<byte[]> createDownloadRequest(String downloadUrl, Response.Listener<byte[]> response,
                                                  Response.ErrorListener errorListener, Map<String, String> params) {
         return new FileDownloadRequest(downloadUrl, response, errorListener, params);

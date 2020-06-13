@@ -45,13 +45,13 @@ public class GiteaEndpoint extends Endpoint {
     private String authString;
     private String userAgent = Endpoint.USER_AGENT;
 
-    /** Methods of authenticating with the Gitea API.
-     * NONE: No authentication
-     * TOKEN: Authorization via an API key token
-     * OAUTH2: Access token that is obtained from Gitea's OAuth2 provider **/
+    /** Methods of authenticating with the Gitea API. **/
     public enum GiteaAuth {
+        /** No authentication. **/
         NONE,
+        /** Authorization via an API key token **/
         TOKEN,
+        /** Access token that is obtained from Gitea's OAuth2 provider. **/
         OAUTH2
     }
 
@@ -135,7 +135,8 @@ public class GiteaEndpoint extends Endpoint {
 
     /** Parses the release list to get the latest non-draft release.
      * If a pre-release version is requested but there are no pre-releases,
-     * the latest stable version would be used instead. **/
+     * the latest stable version would be used instead.
+     * @param response The response of releases received from the request. **/
     public void parseReleaseList(@NonNull JSONArray response) throws JSONException {
         Integer firstPreRelease = null;
         Integer firstStableRelease = null; // Fallback if there are no pre releases
@@ -162,7 +163,8 @@ public class GiteaEndpoint extends Endpoint {
         parseRelease(targetObject);
     }
 
-    /** Parses a specific release to get the version and download info. **/
+    /** Parses a specific release to get the version and download info.
+     * @param response The specific version of the release requested. **/
     public void parseRelease(@NonNull JSONObject response) throws JSONException, NumberFormatException, IllegalStateException {
         String versionTag = response.getString("tag_name");
         String downloadLink = null;
@@ -192,7 +194,8 @@ public class GiteaEndpoint extends Endpoint {
         return headers;
     }
 
-    /** Sets the user agent for the request. Defaults to Endpoint.USER_AGENT. **/
+    /** Sets the user agent for the request. Defaults to Endpoint.USER_AGENT.
+     * @param userAgent The user agent that is used to sent the request. **/
     public void setUserAgent(String userAgent) {
         this.userAgent = userAgent;
     }

@@ -136,7 +136,8 @@ public class GitHubEndpoint extends Endpoint {
 
     /** Parses the releases list to get the latest pre release.
      * If none can be found, the first stable release would be parsed;
-     * and if there are no releases, the function would throw an IllegalStateException. **/
+     * and if there are no releases, the function would throw an IllegalStateException.
+     * @param response The response received from the request. **/
     private void parseReleaseList(@NonNull JSONArray response) throws JSONException, NumberFormatException, IllegalStateException {
         Integer firstStableRelease = null; // Fallback if there are no pre releases
         JSONObject targetObject = null;
@@ -203,7 +204,8 @@ public class GitHubEndpoint extends Endpoint {
         };
     }
 
-    /** Parses a specific release to get the version and download info. **/
+    /** Parses a specific release to get the version and download info.
+     * @param response The JSON object for a specific GitHub release. **/
     private void parseRelease(@NonNull JSONObject response) throws JSONException, NumberFormatException, IllegalStateException {
         String versionTag = response.getString("tag_name");
         String downloadLink = null;
@@ -230,7 +232,8 @@ public class GitHubEndpoint extends Endpoint {
         return headers;
     }
 
-    /** Sets the user agent for the request. Defaults to Endpoint.USER_AGENT. **/
+    /** Sets the user agent for the request. Defaults to Endpoint.USER_AGENT.
+     * @param userAgent The user agent used to send the request. **/
     public void setUserAgent(String userAgent) {
         this.userAgent = userAgent;
     }

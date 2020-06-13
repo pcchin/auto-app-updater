@@ -13,6 +13,8 @@
 
 package com.pcchin.auto_app_updater.utils;
 
+import androidx.annotation.NonNull;
+
 import com.android.volley.NetworkResponse;
 import com.android.volley.Request;
 import com.android.volley.Response;
@@ -25,8 +27,12 @@ public class FileDownloadRequest extends Request<byte[]> {
     private final Response.Listener<byte[]> requestResponse;
     private final Map<String, String> dlParams;
 
-    /** Default constructor. **/
-    protected FileDownloadRequest(String mUrl, Response.Listener<byte[]> listener,
+    /** Default constructor.
+     * @param mUrl The URL that will be used to download the file.
+     * @param listener The listener that will be called when the file finishes downloading.
+     * @param errorListener The listener that will be called when an error occurs when the file is downloading.
+     * @param params The headers that will be sent together with the request. **/
+    public FileDownloadRequest(String mUrl, Response.Listener<byte[]> listener,
                                   Response.ErrorListener errorListener, Map<String, String> params) {
         super(Method.GET, mUrl, errorListener);
         setShouldCache(false);
@@ -34,21 +40,23 @@ public class FileDownloadRequest extends Request<byte[]> {
         dlParams = params;
     }
 
-    /** Returns the params. Nothing to see here. **/
+    /** Returns the headers for the request. **/
     @Override
     protected Map<String, String> getParams() {
         return dlParams;
     }
 
-    /** Delivers the response, nothing to see here. **/
+    /** Delivers the response.
+     * @param response The listener which handles the completed request. **/
     @Override
     protected void deliverResponse(byte[] response) {
         requestResponse.onResponse(response);
     }
 
-    /** Pass on the response data. Nothing to see here. **/
+    /** Pass on the response data.
+     * @param response The response data that is not yet parsed. **/
     @Override
-    protected Response<byte[]> parseNetworkResponse(NetworkResponse response) {
+    protected Response<byte[]> parseNetworkResponse(@NonNull NetworkResponse response) {
         return Response.success( response.data, HttpHeaderParser.parseCacheHeaders(response));
     }
 }

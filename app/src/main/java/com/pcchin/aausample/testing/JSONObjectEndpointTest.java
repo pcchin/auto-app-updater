@@ -27,7 +27,7 @@ import org.json.JSONException;
 
 /** Tests to see if the JSON Object endpoint performs as expected.
  * The test endpoint is at https://my-json-server.typicode.com/aau-test/json-test.
- * All the functions need to go through logcat to be sure whether they actually ran correctly. **/
+ * The tests can't be put in androidTest as listeners are needed to be used. **/
 public class JSONObjectEndpointTest {
     private RequestQueue queue;
 
@@ -173,7 +173,7 @@ public class JSONObjectEndpointTest {
             }
         };
         differenceEndpoint.setRequestQueue(queue);
-        differenceEndpoint.setCurrentVersion("v2.0.0");
+        differenceEndpoint.setCurrentVersion("v2.0.0", false);
         differenceEndpoint.update();
     }
 
@@ -182,7 +182,7 @@ public class JSONObjectEndpointTest {
     public void testObjectNoAttributes() {
         JSONObjectEndpoint endpoint = getCommonEndpoint(4);
         endpoint.setRequestQueue(queue);
-        endpoint.setCurrentVersion("1.0.0");
+        endpoint.setCurrentVersion("1.0.0", false);
         endpoint.update();
     }
 
@@ -191,7 +191,7 @@ public class JSONObjectEndpointTest {
     public void testObjectNoRequiredAttributes() {
         JSONObjectEndpoint endpoint = getCommonEndpoint(5);
         endpoint.setRequestQueue(queue);
-        endpoint.setCurrentVersion("1.1.1-alpha");
+        endpoint.setCurrentVersion("1.1.1-alpha", false);
         endpoint.update();
     }
 
@@ -281,7 +281,7 @@ public class JSONObjectEndpointTest {
             }
         };
         endpoint.setRequestQueue(queue);
-        endpoint.setCurrentVersion("1A");
+        endpoint.setCurrentVersion("1A", false);
         endpoint.update();
     }
 }

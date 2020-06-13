@@ -45,13 +45,13 @@ public class GitLabEndpoint extends Endpoint {
     private String authString;
     private String userAgent = Endpoint.USER_AGENT;
 
-    /** Methods of authenticating with the GitLab API.
-     * None: No authentication
-     * OAUTH2: OAuth2 token
-     * PRIVATE_TOKEN: Personal / project access tokens **/
+    /** Methods of authenticating with the GitLab API. **/
     public enum GitLabAuth {
+        /** No authentication. **/
         NONE,
+        /** OAuth2 token. **/
         OAUTH2,
+        /** Personal / project access token. **/
         PRIVATE_TOKEN
     }
 
@@ -131,7 +131,8 @@ public class GitLabEndpoint extends Endpoint {
 
     /** Parses the release list to get the latest non-draft release.
      * If a pre-release version is requested but there are no pre-releases,
-     * the latest stable version would be used instead. **/
+     * the latest stable version would be used instead.
+     * @param response The response returned from the GitLab request. **/
     public void parseReleaseList(@NonNull JSONArray response) throws JSONException, NumberFormatException, IllegalStateException {
         JSONObject targetObject = null;
         if (response.length() > 0) targetObject = response.getJSONObject(0);
@@ -165,7 +166,8 @@ public class GitLabEndpoint extends Endpoint {
         return headers;
     }
 
-    /** Sets the user agent for the request. Defaults to Endpoint.USER_AGENT. **/
+    /** Sets the user agent for the request. Defaults to Endpoint.USER_AGENT.
+     * @param userAgent The user agent used to send the request. **/
     public void setUserAgent(String userAgent) {
         this.userAgent = userAgent;
     }

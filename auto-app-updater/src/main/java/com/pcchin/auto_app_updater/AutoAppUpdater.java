@@ -32,34 +32,39 @@ import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
-/** An updater that checks for updates to the app. **/
+/** An updater that checks for updates to the app.
+ * This is the class that should be started first when running the updater. **/
 public class AutoAppUpdater {
     private Context context;
 
     private int updateInterval; // The update interval for the app (In seconds).
     private List<Endpoint> endpointList; // All the possible endpoints for updating the app.
 
-    // The type of update checks that will be performed
+    /** The type of update checks that will be performed. **/
     public enum UpdateType {
-        // As long as the version provided differs from the current version, a version update would be needed.
+        /** The semantic versioning from http://semver.org/. **/
+        SEMANTIC,
+        /** As long as the version provided differs from the current version, a version update would be needed. **/
         DIFFERENCE,
-        // The version provided will be a number, and if the number is larger than the current one,
-        // the app would need to be updated
+        /** The version provided will be a number, and if the number is larger than the current one,
+         * the app would need to be updated. **/
         INCREMENTAL,
-        // Same thing as incremental, but for decimal numbers
+        /** The version provided will be a decimal number, and if the number is larger than the current one,
+         * the app would need to be updated. **/
         DECIMAL_INCREMENTAL
     }
 
-    /** The constructor for the class, only used by the builder. **/
+    /** The constructor for the class, only used by the builder.
+     * @param context The context used by the app. **/
     private AutoAppUpdater(Context context) {
         this.context = context;
         deletePreviousAPKs();
     }
 
-    /** Delete the previous APKs that are downloaded from the app.**/
+    /** Delete the previous APKs that are downloaded from the app. **/
     public void deletePreviousAPKs() {
         SharedPreferences sharedPref = context.getSharedPreferences("com.pcchin.auto_app_updater", Context.MODE_PRIVATE);
-        Set<String> previousApkList = UpdaterFunctions.getStringSet(sharedPref);
+        Set<String> previousApkList = UpdaterFunctions.getApkStringSet(sharedPref);
         for (String previousApk: previousApkList) {
             if (new File(previousApk).delete()) {
                 previousApkList.remove(previousApk);
@@ -90,7 +95,8 @@ public class AutoAppUpdater {
 
     /** The builder class for creating the AutoAppUpdater.
      * The order of method calls should be
-     * setUpdateType -> setCurrentVersion -> setUpdateDialog -> addEndpoint / addEndpoints. **/
+     * setUpdateType -> setCurrentVersion -> setUpdateDialog -> addEndpoint / addEndpoints.
+     * The full lifecycle can be found in the Wiki of the repository.**/
     public static class Builder {
         private Context bContext;
         private FragmentManager bFragmentManager;
@@ -109,13 +115,20 @@ public class AutoAppUpdater {
         private Float bCurrentVersionDecimal;
 
         /** The default constructor for the builder.
-         * The default values for variables are set here. **/
-        public Builder(@NonNull Context context, @NonNull FragmentManager manager, String bContentProvider) {
-            this(context, manager, "AutoAppUpdater", bContentProvider);
+         * The default values for variables are set here.
+         * @param context The context that will be used by the updater.
+         * @param manager The Fragment manager that will be used to display the update dialog.
+         * @param contentProvider The content provider that will be used to open the downloaded APK file. (e.g. com.pcchin.aausample.ContentProvider) **/
+        public Builder(@NonNull Context context, @NonNull FragmentManager manager, String contentProvider) {
+            this(context, manager, "AutoAppUpdater", contentProvider);
         }
 
         /** The default constructor for the builder.
-         * The default values for variables are set here. **/
+         * The default values for variables are set here.
+         * @param context The context that will be used by the updater.
+         * @param manager The Fragment manager that will be used to display the update dialog.
+         * @param tag The tag that will be used to display the update dialog.
+         * @param contentProvider The content provider that will be used to open the downloaded APK file. (e.g. com.pcchin.aausample.ContentProvider)**/
         public Builder(@NonNull Context context, @NonNull FragmentManager manager, String tag, String contentProvider) {
             this.bContext = context;
             this.bUpdateType = UpdateType.DIFFERENCE;
@@ -128,7 +141,8 @@ public class AutoAppUpdater {
         }
 
         /** Sets the update type of the updater.
-         * If a type is not set, it is assumed to be UpdateType.DIFFERENCE. **/
+         * If a type is not set, it is assumed to be UpdateType.DIFFERENCE.
+         * @param type The update type that will be used. **/
         public Builder setUpdateType(UpdateType type) {
             this.bUpdateType = type;
             return this;
@@ -136,7 +150,8 @@ public class AutoAppUpdater {
 
         /** Sets the update interval of the updater.
          * The update interval will not be checked if it is run within that period.
-         * If the update interval is not set, it is assumed to be 86400 seconds. (One day) **/
+         * If the update interval is not set, it is assumed to be 86400 seconds. (One day)
+         * @param interval The update interval for the app (In seconds). **/
         public Builder setUpdateInterval(int interval) {
             if (interval < 0) {
                 throw new IllegalArgumentException(String.format("Interval must be above or equal to 0, got %s", interval));
@@ -147,10 +162,11 @@ public class AutoAppUpdater {
         }
 
         /** Sets the current version of the app.
-         * This should be used in conjunction with UpdateType.DIFFERENCE
-         * and should be used after setUpdateType is called. **/
+         * This should be used in conjunction with UpdateType.DIFFERENCE / UpdateType.
+         * and should be used after setUpdateType is called.
+         * @param version The current version (as a String) of the app. **/
         public Builder setCurrentVersion(@NonNull String version) {
-            if (bUpdateType != UpdateType.DIFFERENCE) {
+            if (bUpdateType != UpdateType.DIFFERENCE && bUpdateType != UpdateType.SEMANTIC) {
                 throw new IllegalStateException(String.format("Incorrect update type set, expected" +
                         " UpdateType.DIFFERENCE but got %s", bUpdateType));
             }
@@ -160,7 +176,8 @@ public class AutoAppUpdater {
 
         /** Sets the current version of the app.
          * This should be used in conjunction with UpdateType.INCREMENTAL
-         * and should be used after setUpdateType is called. **/
+         * and should be used after setUpdateType is called.
+         * @param version The current version (as an integer) of the app.**/
         public Builder setCurrentVersion(int version) {
             if (bUpdateType != UpdateType.INCREMENTAL) {
                 throw new IllegalStateException(String.format("Incorrect update type set, expected" +
@@ -172,7 +189,8 @@ public class AutoAppUpdater {
 
         /** Sets the current version of the app.
          * This should be used in conjunction with UpdateType.DECIMAL_INCREMENTAL
-         * and should be used after setUpdateType is called. **/
+         * and should be used after setUpdateType is called.
+         * @param version The current version (as a float) of the app.**/
         public Builder setCurrentVersion(float version) {
             if (bUpdateType != UpdateType.DECIMAL_INCREMENTAL) {
                 throw new IllegalStateException(String.format("Incorrect update type set, expected" +
@@ -183,7 +201,8 @@ public class AutoAppUpdater {
         }
 
         /** Adds an endpoint to the app.
-         * This should be used after setCurrentVersion is called. **/
+         * This should be used after setCurrentVersion is called.
+         * @param endpoint The update endpoint to be added. **/
         public Builder addEndpoint(@NonNull Endpoint endpoint) {
             checkEndpointRequirements();
             setEndpointProperties(endpoint);
@@ -192,7 +211,8 @@ public class AutoAppUpdater {
         }
 
         /** Sets the endpoints for the app, takes in a list containing multiple endpoints.
-         * The endpoints at the start of the list will be executed first. **/
+         * The endpoints at the start of the list will be executed first.
+         * @param endpoints A list of update endpoints that will be added. **/
         public Builder addEndpointList(@NonNull List<Endpoint> endpoints) {
             checkEndpointRequirements();
             for (Endpoint endpoint: endpoints) {
@@ -203,13 +223,15 @@ public class AutoAppUpdater {
         }
 
         /** Sets the endpoints for the app, takes in a list containing multiple endpoints.
-         * The endpoints at the start of the list will be executed first. **/
+         * The endpoints at the start of the list will be executed first.
+         * @param endpoints An array of update endpoints that will be added.**/
         public Builder addEndpointList(@NonNull Endpoint[] endpoints) {
             return addEndpoints(endpoints);
         }
 
         /** Sets the endpoints for the app, takes in multiple arguments.
-         * The endpoints at the start of the arguments list will be executed first. **/
+         * The endpoints at the start of the arguments list will be executed first.
+         * @param endpoints The update endpoints that will be added. **/
         public Builder addEndpoints(@NonNull Endpoint... endpoints) {
             checkEndpointRequirements();
             for (Endpoint endpoint: endpoints) {
@@ -221,18 +243,22 @@ public class AutoAppUpdater {
 
         /** Sets the update dialog for the updater, defaults to UpdaterDialog without any additional arguments.
          * This should be called before addEndpoint or addEndpoints call as they rely on this dialog.
-         * If you wish to use a custom dialog, you would need to extend UpdaterDialog to do so. **/
+         * @param dialog The dialog that will be shown when a newer version is found.
+         *               If you wish to use a custom dialog, you would need to extend UpdaterDialog to do so. **/
         public Builder setUpdateDialog(@NonNull UpdaterDialog dialog) {
             this.bUpdateDialog = dialog;
             return this;
         }
 
-        /** Sets the properties of the endpoint. **/
+        /** Sets the properties of the endpoint before passing them on to the app updater.
+         * @param endpoint The endpoint that will be added to the app updater. **/
         private void setEndpointProperties(@NonNull Endpoint endpoint) {
             endpoint.setContentProvider(bContentProvider);
             endpoint.setUpdateDialog(bUpdateDialog, bFragmentManager, bFragmentTag);
-            if (bUpdateType == UpdateType.DIFFERENCE) {
-                endpoint.setCurrentVersion(bCurrentVersionStr);
+            if (bUpdateType == UpdateType.SEMANTIC) {
+                endpoint.setCurrentVersion(bCurrentVersionStr, true);
+            } else if (bUpdateType == UpdateType.DIFFERENCE) {
+                endpoint.setCurrentVersion(bCurrentVersionStr, false);
             } else if (bUpdateType == UpdateType.INCREMENTAL) {
                 endpoint.setCurrentVersion(bCurrentVersionInt);
             } else {

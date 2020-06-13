@@ -13,8 +13,6 @@
 
 package com.pcchin.auto_app_updater.endpoint.custom;
 
-import android.util.Log;
-
 import androidx.annotation.NonNull;
 
 import com.android.volley.NetworkResponse;
@@ -99,8 +97,6 @@ public class JSONArrayEndpoint extends Endpoint {
                 try {
                     parseResponse(response);
                 } catch (JSONException e) {
-                    Log.w("JSONArrayEndpoint", "Unable to get attributes from JSON response, stack trace is");
-                    e.printStackTrace();
                     onFailure(e);
                 }
             }
@@ -124,13 +120,14 @@ public class JSONArrayEndpoint extends Endpoint {
         };
     }
 
-    /** Parses the JSON Array response. **/
+    /** Parses the JSON Array response.
+     * @param response The response received from the Volley request. **/
     private void parseResponse(@NonNull JSONArray response) throws JSONException {
         JSONObject firstObject = response.getJSONObject(0);
         String downloadUrl = firstObject.getString(downloadUrlAttribute);
         String learnMoreUrl = null;
         if (learnMoreAttribute != null) learnMoreUrl = firstObject.getString(learnMoreAttribute);
-        if (super.updateType == AutoAppUpdater.UpdateType.DIFFERENCE) {
+        if (super.updateType == AutoAppUpdater.UpdateType.DIFFERENCE || super.updateType == AutoAppUpdater.UpdateType.SEMANTIC) {
             String version = firstObject.getString(versionAttribute);
             if (learnMoreUrl == null) onSuccess(version, downloadUrl);
             else onSuccess(version, downloadUrl, learnMoreUrl);
@@ -147,7 +144,8 @@ public class JSONArrayEndpoint extends Endpoint {
 
     //****** Start of getters and setters ******//
 
-    /** Sets the user agent for the request. Defaults to Endpoint.USER_AGENT. **/
+    /** Sets the user agent for the request. Defaults to Endpoint.USER_AGENT.
+     * @param userAgent The user agent used to send the request. **/
     public void setUserAgent(String userAgent) {
         this.userAgent = userAgent;
     }

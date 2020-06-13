@@ -24,7 +24,10 @@ import com.pcchin.auto_app_updater.AutoAppUpdater;
 import com.pcchin.auto_app_updater.BuildConfig;
 import com.pcchin.auto_app_updater.dialogs.UpdaterDialog;
 
-/** The endpoint used to get the updater service. **/
+import de.skuzzle.semantic.Version;
+
+/** The endpoint used to get the updater service.
+ * Extend this class to create your own endpoints. **/
 public abstract class Endpoint {
     /* Example user agent: "AutoAppUpdater/1.0.0 (...)" */
     @SuppressWarnings("ConstantConditions")
@@ -44,20 +47,25 @@ public abstract class Endpoint {
     protected int currentVersionInt;
     protected float currentVersionDecimal;
 
-    /** The constructor for the endpoint. Should not be used. **/
-    public Endpoint() {
+    /** The constructor for the endpoint. This should only be used by child classes as super()
+     * in their constructors. **/
+    protected Endpoint() {
         this.updateDialog = new UpdaterDialog();
     }
 
     /** Sets the backup endpoint of the app.
-     * The endpoint can be null if no more backup endpoints are found.
-     * This function does not need to be called manually. **/
+     * This function does not need to be called manually as it is called within AutoAppUpdater.
+     * @param backupEndpoint The next endpoint that would be called if this endpoint fails.
+     *                       If no more backup endpoints are found, this can be null. **/
     public void setBackupEndpoint(Endpoint backupEndpoint) {
         this.backupEndpoint = backupEndpoint;
     }
 
     /** Sets the current version of the app from within AutoAppUpdater.
-     * This function does not need to be called manually. **/
+     * This function does not need to be called manually as it is called within AutoAppUpdater.
+     * @param dialog The dialog that will be shown if a newer version of the app is found.
+     * @param manager The Fragment manager that will be used to display the dialog.
+     * @param tag The tag that will be used when displaying the dialog. **/
     public void setUpdateDialog(UpdaterDialog dialog, FragmentManager manager, String tag) {
         this.updateDialog = dialog;
         this.manager = manager;
@@ -65,34 +73,44 @@ public abstract class Endpoint {
     }
 
     /** Sets the current version of the app from within AutoAppUpdater.
-     * This function does not need to be called manually. **/
-    public void setCurrentVersion(String version) {
-        this.updateType = AutoAppUpdater.UpdateType.DIFFERENCE;
+     * This function does not need to be called manually.
+     * @param version The current version of the app.
+     * @param isSemantic Whether semantic version is used for the updater. **/
+    public void setCurrentVersion(String version, boolean isSemantic) {
+        if (isSemantic) {
+            this.updateType = AutoAppUpdater.UpdateType.SEMANTIC;
+        } else {
+            this.updateType = AutoAppUpdater.UpdateType.DIFFERENCE;
+        }
         this.currentVersionStr = version;
     }
 
     /** Sets the current version of the app from within AutoAppUpdater.
-     * This function does not need to be called manually. **/
+     * This function does not need to be called manually as it is called within AutoAppUpdater.
+     * @param version The current integer version of the app. **/
     public void setCurrentVersion(int version) {
         this.updateType = AutoAppUpdater.UpdateType.INCREMENTAL;
         this.currentVersionInt = version;
     }
 
     /** Sets the current version of the app from within AutoAppUpdater.
-     * This function does not need to be called manually. **/
+     * This function does not need to be called manually as it is called within AutoAppUpdater.
+     * @param version The current decimal version of the app. **/
     public void setCurrentVersion(float version) {
         this.updateType = AutoAppUpdater.UpdateType.DECIMAL_INCREMENTAL;
         this.currentVersionDecimal = version;
     }
 
     /** Sets the content provider which is required to get the files.
-     * This function does not needed to be called manually. **/
+     * This function does not needed to be called manually as it is called within AutoAppUpdater.
+     * @param provider The content provider that will be used to open the downloaded APK file. (e.g. com.pcchin.aausample.ContentProvider)**/
     public void setContentProvider(String provider) {
         this.updateDialog = new UpdaterDialog(provider);
     }
 
     /** Sets the current queue for the request.
-     * This function does not need to be called manually. **/
+     * This function does not need to be called manually as it is called within AutoAppUpdater.
+     * @param queue The Volley request queue that will be used to run the request. **/
     public void setRequestQueue(RequestQueue queue) {
         this.queue = queue;
     }
@@ -110,9 +128,18 @@ public abstract class Endpoint {
     public abstract Request<?> getRequest();
 
     /** The function that is called if the latest version is able to be successfully retrieved.
-     * This function would only be called if the update type is UpdateType.DIFFERENCE. **/
+     * This function would only be called if the update type is UpdateType.DIFFERENCE or UpdateType.SEMANTIC.
+     * @param version The latest version of the app.
+     * @param downloadLink The download link for the APK. **/
     public void onSuccess(@NonNull String version, @NonNull String downloadLink) {
-        if (!version.equals(currentVersionStr)) {
+        boolean isSemanticUpdate = false;
+        try {
+            isSemanticUpdate = updateType == AutoAppUpdater.UpdateType.SEMANTIC &&
+                    Version.parseVersion(version).isGreaterThan(Version.parseVersion(currentVersionStr));
+        } catch (Version.VersionFormatException | IllegalArgumentException e) {
+            onFailure(e);
+        }
+        if (isSemanticUpdate || (updateType == AutoAppUpdater.UpdateType.DIFFERENCE && !version.equals(currentVersionStr))) {
             updateDialog.setCurrentVersion(currentVersionStr);
             updateDialog.setNewVersion(version);
             updateApp(downloadLink);
@@ -120,15 +147,20 @@ public abstract class Endpoint {
     }
 
     /** The function that is called if the latest version is able to be successfully retrieved.
-     * This function would only be called if the update type is UpdateType.DIFFERENCE.
-     * The 'Learn More' button would be enabled. **/
+     * This function would only be called if the update type is UpdateType.DIFFERENCE or UpdateType.SEMANTIC.
+     * The 'Learn More' button would be enabled.
+     * @param version The latest version of the app.
+     * @param downloadLink The download link for the APK.
+     * @param learnMoreLink The link accessed by the user to learn more about the latest update. **/
     public void onSuccess(@NonNull String version, @NonNull String downloadLink, String learnMoreLink) {
         setUpdateDialogLearnMore(learnMoreLink);
         onSuccess(version, downloadLink);
     }
 
     /** The function that is called if the latest version is able to be successfully retrieved.
-     * This function would only be called if the update type is UpdateType.INCREMENTAL. **/
+     * This function would only be called if the update type is UpdateType.INCREMENTAL.
+     * @param version The latest version of the app.
+     * @param downloadLink The download link for the APK.**/
     public void onSuccess(int version, @NonNull String downloadLink) {
         if (version > currentVersionInt) {
             updateDialog.setCurrentVersion(String.valueOf(version));
@@ -139,14 +171,19 @@ public abstract class Endpoint {
 
     /** The function that is called if the latest version is able to be successfully retrieved.
      * This function would only be called if the update type is UpdateType.INCREMENTAL.
-     * The 'Learn More' button would be enabled.**/
+     * The 'Learn More' button would be enabled.
+     * @param version The latest version of the app.
+     * @param downloadLink The download link for the APK.
+     * @param learnMoreLink The link accessed by the user to learn more about the latest update.**/
     public void onSuccess(int version, @NonNull String downloadLink, String learnMoreLink) {
         setUpdateDialogLearnMore(learnMoreLink);
         onSuccess(version, downloadLink);
     }
 
     /** The function that is called if the latest version is able to be successfully retrieved.
-     * This function would only be called if the update type is UpdateType.INCREMENTAL. **/
+     * This function would only be called if the update type is UpdateType.INCREMENTAL.
+     * @param version The latest version of the app.
+     * @param downloadLink The download link for the APK.**/
     public void onSuccess(float version, @NonNull String downloadLink) {
         if (version > currentVersionDecimal) {
             updateDialog.setCurrentVersion(String.valueOf(version));
@@ -157,19 +194,24 @@ public abstract class Endpoint {
 
     /** The function that is called if the latest version is able to be successfully retrieved.
      * This function would only be called if the update type is UpdateType.INCREMENTAL.
-     * The 'Learn More' button would be enabled.**/
+     * The 'Learn More' button would be enabled.
+     * @param version The latest version of the app.
+     * @param downloadLink The download link for the APK.
+     * @param learnMoreLink The link accessed by the user to learn more about the latest update.**/
     public void onSuccess(float version, @NonNull String downloadLink, String learnMoreLink) {
         setUpdateDialogLearnMore(learnMoreLink);
         onSuccess(version, downloadLink);
     }
 
-    /** Sets the 'Learn More' URL for the update dialog. **/
-    private void setUpdateDialogLearnMore(String learnMoreUrl) {
+    /** Sets the 'Learn More' URL for the update dialog.
+     * @param learnMoreLink The link accessed by the user to learn more about the latest update. **/
+    private void setUpdateDialogLearnMore(String learnMoreLink) {
         updateDialog.setShowLearnMore(true);
-        updateDialog.setLearnMoreUrl(learnMoreUrl);
+        updateDialog.setLearnMoreUrl(learnMoreLink);
     }
 
-    /** Displays the AlertDialog and push notification for updating the app. **/
+    /** Displays the AlertDialog and push notification for updating the app.
+     * @param downloadLink The download link for the APK. **/
     private void updateApp(String downloadLink) {
         updateDialog.setDownloadLink(downloadLink);
         updateDialog.show(manager, tag);
@@ -178,7 +220,8 @@ public abstract class Endpoint {
     /** The function that is called if the endpoint fails.
      * Override this function if you wish to handle the error yourself,
      * and call super.onFail for it to automatically fall back to the subsequent endpoints.
-     * If there is no more backup endpoints, the error would be thrown. **/
+     * If there is no more backup endpoints, the error would be thrown.
+     * @param error The error that caused the endpoint to fail. **/
     public void onFailure(@NonNull Exception error) {
         if (this.backupEndpoint == null) {
             throw new IllegalStateException(error);

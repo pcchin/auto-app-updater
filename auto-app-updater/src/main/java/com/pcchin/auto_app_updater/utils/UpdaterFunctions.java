@@ -39,7 +39,8 @@ public class UpdaterFunctions {
 
     /** A static function that returns whether the app is installed through the Google Play Store.
      * This can be useful to check if you do not wish for the app to be updated through AutoAppUpdater
-     * if it is downloaded from the Play Store. **/
+     * if it is downloaded from the Play Store.
+     * @param context The context needed to get the package manager. **/
     public static boolean isFromGooglePlayStore(@NonNull Context context) {
         // A list with valid installers package name
         List<String> validInstallers = Arrays.asList("com.android.vending", "com.google.android.feedback");
@@ -50,7 +51,8 @@ public class UpdaterFunctions {
     }
 
     /** A static function that checks whether there is currently network connection for the app.
-     * @return true if the device is connected to the internet and false if not. **/
+     * @return true if the device is connected to the internet and false if not.
+     * @param context The context needed to get the connectivity service. **/
     public static boolean isConnected(@NonNull Context context) {
         ConnectivityManager cm = (ConnectivityManager)context.getSystemService(Context.CONNECTIVITY_SERVICE);
         if (Build.VERSION.SDK_INT < 23) {
@@ -70,7 +72,8 @@ public class UpdaterFunctions {
         return false;
     }
 
-    /** Gets the application name of the app from the given context. **/
+    /** Gets the application name of the app from the given context.
+     * @param context The context of the current application. **/
     public static String getApplicationName(@NonNull Context context) {
         ApplicationInfo applicationInfo = context.getApplicationInfo();
         int stringId = applicationInfo.labelRes;
@@ -79,7 +82,8 @@ public class UpdaterFunctions {
 
     /** Get the internal download directory of the app.
      * Falls back to the root directory if no such download directory could be found.
-     * The path will always end in '/'. **/
+     * The path will always end in '/'.
+     * @param context The context for the app. **/
     @NonNull
     public static String getInternalDownloadDir(@NonNull Context context) {
         File downloadDirFile = context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS);
@@ -107,9 +111,10 @@ public class UpdaterFunctions {
     /** Gets the set of Strings of the downloaded APKs.
      * Returns a new HashSet if no values are found.
      * This is required due to the following restriction:
-     * https://medium.com/@anupamchugh/a-nightmare-with-shared-preferences-and-stringset-c53f39f1ef52**/
+     * https://medium.com/@anupamchugh/a-nightmare-with-shared-preferences-and-stringset-c53f39f1ef52
+     * @param sharedPref The shared preferences that the string set is stored in.**/
     @NonNull
-    public static Set<String> getStringSet(@NonNull SharedPreferences sharedPref) {
+    public static Set<String> getApkStringSet(@NonNull SharedPreferences sharedPref) {
         Set<String> sharedPrefValues = sharedPref.getStringSet("previousApkList", null);
         if (sharedPrefValues == null) return new HashSet<>();
         else return new HashSet<>(sharedPrefValues);

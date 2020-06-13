@@ -45,6 +45,7 @@ dependencies {
 
     // Other implementations
     implementation 'com.android.volley:volley:1.1.1'
+    implementation 'de.skuzzle:semantic-version:2.1.0'
 }
 
 // Must be at the bottom of the file
