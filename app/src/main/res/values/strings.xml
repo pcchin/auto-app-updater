@@ -13,4 +13,5 @@
 
 <resources>
     <string name="app_name">Auto App Updater Sample</string>
+    <string name="test_endpoints">Test Endpoints</string>
 </resources>

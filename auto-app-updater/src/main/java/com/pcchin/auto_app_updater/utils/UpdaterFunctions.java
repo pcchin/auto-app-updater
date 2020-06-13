@@ -105,7 +105,9 @@ public class UpdaterFunctions {
     }
 
     /** Gets the set of Strings of the downloaded APKs.
-     * Returns a new HashSet if no values are found. **/
+     * Returns a new HashSet if no values are found.
+     * This is required due to the following restriction:
+     * https://medium.com/@anupamchugh/a-nightmare-with-shared-preferences-and-stringset-c53f39f1ef52**/
     @NonNull
     public static Set<String> getStringSet(@NonNull SharedPreferences sharedPref) {
         Set<String> sharedPrefValues = sharedPref.getStringSet("previousApkList", null);

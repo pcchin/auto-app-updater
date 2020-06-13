@@ -56,9 +56,7 @@ public class AutoAppUpdater {
         deletePreviousAPKs();
     }
 
-    /** Delete the previous APKs that are downloaded from the app.
-     * This is required due to the following restriction:
-     * https://medium.com/@anupamchugh/a-nightmare-with-shared-preferences-and-stringset-c53f39f1ef52 **/
+    /** Delete the previous APKs that are downloaded from the app.**/
     public void deletePreviousAPKs() {
         SharedPreferences sharedPref = context.getSharedPreferences("com.pcchin.auto_app_updater", Context.MODE_PRIVATE);
         Set<String> previousApkList = UpdaterFunctions.getStringSet(sharedPref);

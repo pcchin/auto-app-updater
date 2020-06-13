@@ -180,9 +180,11 @@ public abstract class Endpoint {
      * and call super.onFail for it to automatically fall back to the subsequent endpoints.
      * If there is no more backup endpoints, the error would be thrown. **/
     public void onFailure(@NonNull Exception error) {
-        Log.w("AutoAppUpdater", String.format("Endpoint failed with error %s, stack trace is", error.getMessage()));
-        error.printStackTrace();
-        if (this.backupEndpoint != null) {
+        if (this.backupEndpoint == null) {
+            throw new IllegalStateException(error);
+        } else {
+            Log.w("AutoAppUpdater", String.format("Endpoint failed with error %s, stack trace is", error.getMessage()));
+            error.printStackTrace();
             this.backupEndpoint.update();
         }
     }

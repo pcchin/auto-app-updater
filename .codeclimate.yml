@@ -24,3 +24,5 @@ plugins:
       # Recommends usage of Files.delete, which is not available until API level 26
       squid:S4042:
         enabled: false
+exclude_patterns:
+  - "app/"
