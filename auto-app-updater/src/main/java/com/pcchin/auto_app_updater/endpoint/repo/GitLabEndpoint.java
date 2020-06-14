@@ -37,7 +37,9 @@ import java.util.Map;
  * and the first APK file in that release will be the assets.
  * If the update type is UpdateType.INCREMENTAL, tag_name must be an integer.
  * If the update type is UpdateType.DECIMAL_INCREMENTAL, tag_name must be a valid number.
- * Only the latest release will be taken into account. **/
+ * Only the latest release will be taken into account.
+ * The release info and learn more link would not be shown unless the boolean values
+ *  for them are set in the corresponding UpdateDialog. **/
 public class GitLabEndpoint extends Endpoint {
     private int projectId;
     private String apiPath;
@@ -146,6 +148,7 @@ public class GitLabEndpoint extends Endpoint {
             String linkName = currentObject.getString("name");
             if (linkName.endsWith(".apk")) {
                 downloadLink = currentObject.getString("url");
+                break;
             }
         }
         if (downloadLink == null) throw new IllegalStateException("Asset download link not found in GitHub release!");

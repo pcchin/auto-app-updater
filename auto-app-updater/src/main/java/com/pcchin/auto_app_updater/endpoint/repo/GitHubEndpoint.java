@@ -37,11 +37,13 @@ import java.util.Map;
  * The tag_name of the release will be used as the newer version
  * and the first APK file in that release will be the assets.
  * If the update type is UpdateType.INCREMENTAL, tag_name must be an integer.
- * If the update type is UpdateType.DECIMAL_INCREMENTAL, tag_name must be a valid number. **/
+ * If the update type is UpdateType.DECIMAL_INCREMENTAL, tag_name must be a valid number.
+ * The release info and learn more link would not be shown unless the boolean values
+ * for them are set in the corresponding UpdateDialog.**/
 public class GitHubEndpoint extends Endpoint {
     private String repoPath;
     private String apiPath;
-    private boolean includePreReleases;
+    private boolean isPrerelease;
     private String oAuthToken;
     private String userAgent = Endpoint.USER_AGENT;
 
@@ -50,29 +52,29 @@ public class GitHubEndpoint extends Endpoint {
     /** Default constructor with the repo path and whether to include pre-releases specified.
      * The API path is assumed to be https://api.github.com and no OAuth2 token will be used.
      * @param repoPath The path for the repository in the form of user/repo.
-     * @param includePreReleases Whether to include pre releases in the version check. **/
-    public GitHubEndpoint(String repoPath, boolean includePreReleases) {
-        this(repoPath, includePreReleases, "https://api.github.com");
+     * @param isPrerelease Whether to include pre releases in the version check. **/
+    public GitHubEndpoint(String repoPath, boolean isPrerelease) {
+        this(repoPath, isPrerelease, "https://api.github.com");
     }
 
     /** Default constructor with the repo path and whether to include pre-releases specified.
      * No OAuth2 token will be used.
      * @param repoPath The path for the repository in the form of user/repo.
-     * @param includePreReleases Whether to include pre releases in the version check.
+     * @param isPrerelease Whether to include pre releases in the version check.
      * @param apiPath The path to access the API (Include https:// and without / at the end). **/
-    public GitHubEndpoint(String repoPath, boolean includePreReleases, String apiPath) {
-        this(repoPath, includePreReleases, apiPath, null);
+    public GitHubEndpoint(String repoPath, boolean isPrerelease, String apiPath) {
+        this(repoPath, isPrerelease, apiPath, null);
     }
 
     /** Default constructor with the repo path and whether to include pre-releases specified.
      * @param repoPath The path for the repository in the form of user/repo.
-     * @param includePreReleases Whether to include pre releases in the version check.
+     * @param isPrerelease Whether to include pre releases in the version check.
      * @param apiPath The path to access the API (Include https:// and without / at the end).
      * @param oAuthToken The oAuth2 token to access the repo. (Only use this if you can ensure that your token would not be leaked) **/
-    public GitHubEndpoint(String repoPath, boolean includePreReleases, String apiPath, String oAuthToken) {
+    public GitHubEndpoint(String repoPath, boolean isPrerelease, String apiPath, String oAuthToken) {
         super();
         this.repoPath = repoPath;
-        this.includePreReleases = includePreReleases;
+        this.isPrerelease = isPrerelease;
         this.apiPath = apiPath;
         this.oAuthToken = oAuthToken;
     }
@@ -83,7 +85,7 @@ public class GitHubEndpoint extends Endpoint {
      * a JsonArrayRequest would be returned. Otherwise, a JsonObjectRequest would be returned. **/
     @Override
     public Request<?> getRequest() {
-        if (includePreReleases) {
+        if (isPrerelease) {
             return getPreReleaseRequest();
         } else {
             return getStableRequest();
@@ -135,26 +137,19 @@ public class GitHubEndpoint extends Endpoint {
     }
 
     /** Parses the releases list to get the latest pre release.
-     * If none can be found, the first stable release would be parsed;
      * and if there are no releases, the function would throw an IllegalStateException.
      * @param response The response received from the request. **/
     private void parseReleaseList(@NonNull JSONArray response) throws JSONException, NumberFormatException, IllegalStateException {
-        Integer firstStableRelease = null; // Fallback if there are no pre releases
         JSONObject targetObject = null;
         for (int i = 0; i < response.length(); i++) {
             JSONObject currentRelease = response.getJSONObject(i);
             boolean isPreRelease = currentRelease.getBoolean("prerelease"),
                     isDraft = currentRelease.getBoolean("draft");
-            if (!isDraft) {
-                if (isPreRelease) {
-                    targetObject = currentRelease;
-                    break;
-                } else if (firstStableRelease == null) {
-                    firstStableRelease = i;
-                }
+            if (!isDraft && isPreRelease) {
+                targetObject = currentRelease;
+                break;
             }
         }
-        if (targetObject == null && firstStableRelease != null) targetObject = response.getJSONObject(firstStableRelease);
         if (targetObject == null) {
             throw new IllegalStateException("Asset download link not found in GitHub release!");
         } else {
@@ -207,20 +202,22 @@ public class GitHubEndpoint extends Endpoint {
     /** Parses a specific release to get the version and download info.
      * @param response The JSON object for a specific GitHub release. **/
     private void parseRelease(@NonNull JSONObject response) throws JSONException, NumberFormatException, IllegalStateException {
-        String versionTag = response.getString("tag_name");
-        String downloadLink = null;
+        String versionTag = response.getString("tag_name"), downloadLink = null;
         JSONArray assetsList = response.getJSONArray("assets");
         for (int i = 0; i < assetsList.length(); i++) {
             JSONObject currentObject = assetsList.getJSONObject(i);
             String assetType = currentObject.getString("content_type");
             if (assetType.equals("application/vnd.android.package-archive")) {
                 downloadLink = currentObject.getString("browser_download_url");
+                break;
             }
         }
+        updateDialog.setReleaseInfo(response.getString("body"));
+        updateDialog.setLearnMoreUrl(response.getString("html_url"));
         if (downloadLink == null) throw new IllegalStateException("Asset download link not found in GitHub release!");
-        if (super.updateType == AutoAppUpdater.UpdateType.DIFFERENCE) onSuccess(versionTag, downloadLink);
+        if (super.updateType == AutoAppUpdater.UpdateType.DECIMAL_INCREMENTAL) onSuccess(Float.parseFloat(versionTag), downloadLink);
         else if (super.updateType == AutoAppUpdater.UpdateType.INCREMENTAL) onSuccess(Integer.parseInt(versionTag), downloadLink);
-        else onSuccess(Float.parseFloat(versionTag), downloadLink);
+        else onSuccess(versionTag, downloadLink);
     }
 
     /** Gets the GitHub headers needed for the requests. **/
@@ -229,6 +226,7 @@ public class GitHubEndpoint extends Endpoint {
         Map<String, String> headers = new HashMap<>();
         if (oAuthToken != null)  headers.put("Authorization", String.format("token %s", oAuthToken));
         headers.put("User-agent", userAgent);
+        headers.put("Accept", "application/vnd.github.v3.full+json");
         return headers;
     }
 

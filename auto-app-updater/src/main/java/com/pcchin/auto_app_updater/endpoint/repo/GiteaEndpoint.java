@@ -36,11 +36,13 @@ import java.util.Map;
  * The tag_name of the release will be used as the newer version
  * and the first APK file in that release will be the assets.
  * If the update type is UpdateType.INCREMENTAL, tag_name must be an integer.
- * If the update type is UpdateType.DECIMAL_INCREMENTAL, tag_name must be a valid number.**/
+ * If the update type is UpdateType.DECIMAL_INCREMENTAL, tag_name must be a valid number.
+ * The release info and learn more link would not be shown unless the boolean values
+ *  for them are set in the corresponding UpdateDialog. **/
 public class GiteaEndpoint extends Endpoint {
     private String repoPath;
     private String apiPath;
-    private boolean includePreReleases;
+    private boolean isPreRelease;
     private GiteaAuth authMethod;
     private String authString;
     private String userAgent = Endpoint.USER_AGENT;
@@ -60,30 +62,30 @@ public class GiteaEndpoint extends Endpoint {
     /** Default constructor with the repo path and whether to include pre-releases specified.
      * The API path is assumed to be https://try.gitea.io and no tokens will be used.
      * @param repoPath The path for the repository in the form of user/repo.
-     * @param includePreReleases Whether to include pre releases in the version check. **/
-    public GiteaEndpoint(String repoPath, boolean includePreReleases) {
-        this(repoPath, includePreReleases, "https://try.gitea.io");
+     * @param isPreRelease Whether to include pre releases in the version check. **/
+    public GiteaEndpoint(String repoPath, boolean isPreRelease) {
+        this(repoPath, isPreRelease, "https://try.gitea.io");
     }
 
     /** Default constructor with the repo path and whether to include pre-releases specified.
      * No tokens will be used.
      * @param repoPath The path for the repository in the form of user/repo.
-     * @param includePreReleases Whether to include pre releases in the version check.
+     * @param isPreRelease Whether to include pre releases in the version check.
      * @param apiPath The path to access the API (Include https:// and without / at the end). **/
-    public GiteaEndpoint(String repoPath, boolean includePreReleases, String apiPath) {
-        this(repoPath, includePreReleases, apiPath, GiteaAuth.NONE, null);
+    public GiteaEndpoint(String repoPath, boolean isPreRelease, String apiPath) {
+        this(repoPath, isPreRelease, apiPath, GiteaAuth.NONE, null);
     }
 
     /** Default constructor with the repo path and whether to include pre-releases specified.
      * @param repoPath The path for the repository in the form of user/repo.
-     * @param includePreReleases Whether to include pre releases in the version check.
+     * @param isPreRelease Whether to include pre releases in the version check.
      * @param apiPath The path to access the API (Include https:// and without / at the end).
      * @param authMethod The method which is used to authorize the app.
      * @param authString The access token / oAuth2 token to access the repo. (Only use this if you can ensure that your token would not be leaked) **/
-    public GiteaEndpoint(String repoPath, boolean includePreReleases, String apiPath, GiteaAuth authMethod, String authString) {
+    public GiteaEndpoint(String repoPath, boolean isPreRelease, String apiPath, GiteaAuth authMethod, String authString) {
         super();
         this.repoPath = repoPath;
-        this.includePreReleases = includePreReleases;
+        this.isPreRelease = isPreRelease;
         this.apiPath = apiPath;
         this.authMethod = authMethod;
         this.authString = authString;
@@ -138,44 +140,35 @@ public class GiteaEndpoint extends Endpoint {
      * the latest stable version would be used instead.
      * @param response The response of releases received from the request. **/
     public void parseReleaseList(@NonNull JSONArray response) throws JSONException {
-        Integer firstPreRelease = null;
-        Integer firstStableRelease = null; // Fallback if there are no pre releases
-        JSONObject targetObject;
+        JSONObject targetObject = null;
         for (int i = 0; i < response.length(); i++) {
             JSONObject currentRelease = response.getJSONObject(i);
-            boolean isPreRelease = currentRelease.getBoolean("prerelease"),
+            boolean releaseIsPreRelease = currentRelease.getBoolean("prerelease"),
                     isDraft = currentRelease.getBoolean("draft");
-            if (!isDraft) {
-                if (isPreRelease && firstPreRelease == null) {
-                    firstPreRelease = i;
-                } else if (!isPreRelease && firstStableRelease == null) {
-                    firstStableRelease = i;
-                }
+            if (!isDraft && ((releaseIsPreRelease && isPreRelease) || (!releaseIsPreRelease && !isPreRelease))) {
+                targetObject = currentRelease;
+                break;
             }
         }
-        if (firstStableRelease == null) throw new IllegalStateException("No stable releases found in Gitea release list!");
-        if (firstPreRelease == null) firstPreRelease = firstStableRelease;
-        if (includePreReleases) {
-            targetObject = response.getJSONObject(firstPreRelease);
-        } else {
-            targetObject = response.getJSONObject(firstStableRelease);
-        }
+        if (targetObject == null) throw new IllegalStateException("No stable releases found in Gitea release list!");
         parseRelease(targetObject);
     }
 
     /** Parses a specific release to get the version and download info.
      * @param response The specific version of the release requested. **/
     public void parseRelease(@NonNull JSONObject response) throws JSONException, NumberFormatException, IllegalStateException {
-        String versionTag = response.getString("tag_name");
-        String downloadLink = null;
+        String versionTag = response.getString("tag_name"), downloadLink = null;
         JSONArray assetsList = response.getJSONArray("assets");
         for (int i = 0; i < assetsList.length(); i++) {
             JSONObject currentObject = assetsList.getJSONObject(i);
             String assetName = currentObject.getString("name");
             if (assetName.endsWith(".apk")) {
                 downloadLink = currentObject.getString("browser_download_url");
+                break;
             }
         }
+        updateDialog.setReleaseInfo(response.getString("body"));
+        updateDialog.setLearnMoreUrl(String.format("%s/%s/releases", apiPath, repoPath));
         if (downloadLink == null) throw new IllegalStateException("Asset download link not found in GitHub release!");
         if (super.updateType == AutoAppUpdater.UpdateType.DIFFERENCE) onSuccess(versionTag, downloadLink);
         else if (super.updateType == AutoAppUpdater.UpdateType.INCREMENTAL) onSuccess(Integer.parseInt(versionTag), downloadLink);

@@ -40,6 +40,7 @@ public class JSONArrayEndpoint extends Endpoint {
     private String versionAttribute;
     private String downloadUrlAttribute;
     private String learnMoreAttribute;
+    private String releaseInfoAttribute;
     private Map<String, String> headers;
     private String userAgent = Endpoint.USER_AGENT;
 
@@ -52,7 +53,7 @@ public class JSONArrayEndpoint extends Endpoint {
      * @param versionAttribute The attribute which points to the version.
      * @param downloadUrlAttribute The attribute which points to the download URL.**/
     public JSONArrayEndpoint(String requestUrl, String versionAttribute, String downloadUrlAttribute) {
-        this(Request.Method.GET, requestUrl, versionAttribute, downloadUrlAttribute, null, new HashMap<String, String>());
+        this(requestUrl, versionAttribute, downloadUrlAttribute, null);
     }
 
     /** Default constructor with the request type specified.
@@ -63,7 +64,20 @@ public class JSONArrayEndpoint extends Endpoint {
      * @param downloadUrlAttribute The attribute which points to the download URL.
      * @param learnMoreAttribute The attribute pointing to the Learn More URL.**/
     public JSONArrayEndpoint(String requestUrl, String versionAttribute, String downloadUrlAttribute, String learnMoreAttribute) {
-        this(Request.Method.GET, requestUrl, versionAttribute, downloadUrlAttribute, learnMoreAttribute, new HashMap<String, String>());
+        this(requestUrl, versionAttribute, downloadUrlAttribute, learnMoreAttribute, null);
+    }
+
+    /** Default constructor with the request type specified.
+     * The 'Learn More' button would be shown.
+     *  @param requestUrl The request URL.
+     *  @param versionAttribute The attribute which points to the version.
+     *  @param downloadUrlAttribute The attribute which points to the download URL.
+     *  @param learnMoreAttribute The attribute pointing to the Learn More URL.
+     *  @param releaseInfoAttribute The attribute pointing to the release info. **/
+    public JSONArrayEndpoint(String requestUrl, String versionAttribute, String downloadUrlAttribute,
+                              String learnMoreAttribute, String releaseInfoAttribute) {
+        this(Request.Method.GET, requestUrl, versionAttribute, downloadUrlAttribute,
+                learnMoreAttribute, releaseInfoAttribute, new HashMap<String, String>());
     }
 
     /** Default constructor with the request type and headers specified.
@@ -74,15 +88,17 @@ public class JSONArrayEndpoint extends Endpoint {
      * @param versionAttribute The attribute which points to the version.
      * @param downloadUrlAttribute The attribute which points to the download URL.
      * @param learnMoreAttribute The attribute pointing to the Learn More URL.
+     * @param releaseInfoAttribute The attribute pointing to the release info.
      * @param headers The headers that are used when sending the request. **/
     public JSONArrayEndpoint(int method, String requestUrl, String versionAttribute, String downloadUrlAttribute,
-                              String learnMoreAttribute, Map<String, String> headers) {
+                              String learnMoreAttribute, String releaseInfoAttribute, Map<String, String> headers) {
         super();
         this.method = method;
         this.requestUrl = requestUrl;
         this.versionAttribute = versionAttribute;
         this.downloadUrlAttribute = downloadUrlAttribute;
         this.learnMoreAttribute = learnMoreAttribute;
+        this.releaseInfoAttribute = releaseInfoAttribute;
         this.headers = headers;
     }
 
@@ -127,6 +143,7 @@ public class JSONArrayEndpoint extends Endpoint {
         String downloadUrl = firstObject.getString(downloadUrlAttribute);
         String learnMoreUrl = null;
         if (learnMoreAttribute != null) learnMoreUrl = firstObject.getString(learnMoreAttribute);
+        if (releaseInfoAttribute != null) updateDialog.setReleaseInfo(releaseInfoAttribute);
         if (super.updateType == AutoAppUpdater.UpdateType.DIFFERENCE || super.updateType == AutoAppUpdater.UpdateType.SEMANTIC) {
             String version = firstObject.getString(versionAttribute);
             if (learnMoreUrl == null) onSuccess(version, downloadUrl);

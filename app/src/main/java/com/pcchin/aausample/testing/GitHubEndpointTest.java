@@ -38,19 +38,199 @@ public class GitHubEndpointTest {
         testGitHubNoReleases();
         testGitHubDraftsOnly();
         testGitHubNoPermission();
+        Log.d("Endpoint tests", "GitHub endpoint test completed");
     }
 
     /** Tests whether the GitHub endpoint is able to work successfully. **/
     private void testGitHubSuccess() {
         // Test public repository (Stable)
+        GitHubEndpoint stableEndpoint = getStableEndpoint(false);
+        stableEndpoint.setCurrentVersion("1.1.1", false);
+        stableEndpoint.setRequestQueue(queue);
+        stableEndpoint.update();
         // Test public repository (Pre-release)
-        // Test public repository (Stable + Pre-release)
+        GitHubEndpoint preReleaseEndpoint = new GitHubEndpoint("aau-test/public-prerelease-only", true) {
+            // The correct one
+            @Override
+            public void onSuccess(@NonNull String version, @NonNull String downloadLink) {
+                // Check if version and download link matches
+                if (version.equals("1.1.0") && downloadLink.equals("https://github.com/aau-test/" +
+                        "public-prerelease-only/releases/download/1.1.0/success-1.1.0.apk")) {
+                    Log.d("GitHubEndpointTest", "Test 2 succeeded");
+                } else {
+                    throw new IllegalStateException(String.format("Test 2 got version %s and " +
+                                    "download link %s instead of the expected values",
+                            version, downloadLink));
+                }
+            }
+
+            @Override
+            public void onSuccess(@NonNull String version, @NonNull String downloadLink, String learnMoreLink) {
+                throw new IllegalStateException("onSuccess (String w/h learn more) is called");
+            }
+
+            @Override
+            public void onSuccess(int version, @NonNull String downloadLink) {
+                throw new IllegalStateException("onSuccess (int) is called");
+            }
+
+            @Override
+            public void onSuccess(int version, @NonNull String downloadLink, String learnMoreLink) {
+                throw new IllegalStateException("onSuccess (int w/h learn more) is called");
+            }
+
+            @Override
+            public void onSuccess(float version, @NonNull String downloadLink) {
+                throw new IllegalStateException("onSuccess (float) is called");
+            }
+
+            @Override
+            public void onSuccess(float version, @NonNull String downloadLink, String learnMoreLink) {
+                throw new IllegalStateException("onSuccess (float w/h learn more) is called");
+            }
+        };
+        preReleaseEndpoint.setCurrentVersion("1.1.3", false);
+        preReleaseEndpoint.setRequestQueue(queue);
+        preReleaseEndpoint.update();
+        // Test public repository (Pre-release fallback to stable)
+        GitHubEndpoint fallbackEndpoint = getStableEndpoint(true);
+        fallbackEndpoint.setCurrentVersion("1.1.2", true);
+        fallbackEndpoint.setRequestQueue(queue);
+        fallbackEndpoint.update();
         // Test public repository (Combined)
+        GitHubEndpoint combinedEndpoint = new GitHubEndpoint("aau-test/public-combined", true) {
+            // The correct one
+            @Override
+            public void onSuccess(@NonNull String version, @NonNull String downloadLink) {
+                // Check if version and download link matches
+                if (version.equals("1.1.0-a") && downloadLink.equals("https://github.com/aau-test" +
+                        "/public-combined/releases/download/1.1.0-a/success-1.1.0.apk")) {
+                    Log.d("GitHubEndpointTest", "Test 4 succeeded");
+                } else {
+                    throw new IllegalStateException(String.format("Test 4 got version %s and " +
+                                    "download link %s instead of the expected values",
+                            version, downloadLink));
+                }
+            }
+
+            @Override
+            public void onSuccess(@NonNull String version, @NonNull String downloadLink, String learnMoreLink) {
+                throw new IllegalStateException("onSuccess (String w/h learn more) is called");
+            }
+
+            @Override
+            public void onSuccess(int version, @NonNull String downloadLink) {
+                throw new IllegalStateException("onSuccess (int) is called");
+            }
+
+            @Override
+            public void onSuccess(int version, @NonNull String downloadLink, String learnMoreLink) {
+                throw new IllegalStateException("onSuccess (int w/h learn more) is called");
+            }
+
+            @Override
+            public void onSuccess(float version, @NonNull String downloadLink) {
+                throw new IllegalStateException("onSuccess (float) is called");
+            }
+
+            @Override
+            public void onSuccess(float version, @NonNull String downloadLink, String learnMoreLink) {
+                throw new IllegalStateException("onSuccess (float w/h learn more) is called");
+            }
+        };
+        combinedEndpoint.setCurrentVersion("1.0.0", false);
+        combinedEndpoint.setRequestQueue(queue);
+        combinedEndpoint.update();
+    }
+
+    /** Test whether the endpoint is able to retrieve the stable endpoints from the required repository. **/
+    @NonNull
+    private GitHubEndpoint getStableEndpoint(boolean includePreReleases) {
+        return new GitHubEndpoint("aau-test/public-stable-only", includePreReleases) {
+            // The correct one
+            @Override
+            public void onSuccess(@NonNull String version, @NonNull String downloadLink) {
+                // Check if version and download link matches
+                if (version.equals("1.1.0") && downloadLink.equals("https://github.com/aau-test/" +
+                        "public-stable-only/releases/download/1.1.0/success-1.1.0.apk")) {
+                    Log.d("GitHubEndpointTest", "Stable test succeeded");
+                } else {
+                    throw new IllegalStateException(String.format("Stable test got version %s and " +
+                                    "download link %s instead of the expected values",
+                            version, downloadLink));
+                }
+            }
+
+            @Override
+            public void onSuccess(@NonNull String version, @NonNull String downloadLink, String learnMoreLink) {
+                throw new IllegalStateException("onSuccess (String w/h learn more) is called");
+            }
+
+            @Override
+            public void onSuccess(int version, @NonNull String downloadLink) {
+                throw new IllegalStateException("onSuccess (int) is called");
+            }
+
+            @Override
+            public void onSuccess(int version, @NonNull String downloadLink, String learnMoreLink) {
+                throw new IllegalStateException("onSuccess (int w/h learn more) is called");
+            }
+
+            @Override
+            public void onSuccess(float version, @NonNull String downloadLink) {
+                throw new IllegalStateException("onSuccess (float) is called");
+            }
+
+            @Override
+            public void onSuccess(float version, @NonNull String downloadLink, String learnMoreLink) {
+                throw new IllegalStateException("onSuccess (float w/h learn more) is called");
+            }
+        };
     }
 
     /** Tests whether the GitHub endpoint is able to work successfully for private repositories. **/
     private void testGitHubPrivate() {
         // Test private repository (Combined)
+        GitHubEndpoint endpoint = new GitHubEndpoint("aau-test/private-combined", false) {
+            // The correct one
+            @Override
+            public void onSuccess(@NonNull String version, @NonNull String downloadLink) {
+                // Check if version and download link matches
+                if (version.equals("1.1.0") && downloadLink.equals("https://github.com/aau-test/" +
+                        "private-combined/releases/download/1.1.0/success-1.1.0.apk")) {
+                    Log.d("GitHubEndpointTest", "Private test succeeded");
+                } else {
+                    throw new IllegalStateException(String.format("Private test got version %s and " +
+                                    "download link %s instead of the expected values",
+                            version, downloadLink));
+                }
+            }
+
+            @Override
+            public void onSuccess(@NonNull String version, @NonNull String downloadLink, String learnMoreLink) {
+                throw new IllegalStateException("onSuccess (String w/h learn more) is called");
+            }
+
+            @Override
+            public void onSuccess(int version, @NonNull String downloadLink) {
+                throw new IllegalStateException("onSuccess (int) is called");
+            }
+
+            @Override
+            public void onSuccess(int version, @NonNull String downloadLink, String learnMoreLink) {
+                throw new IllegalStateException("onSuccess (int w/h learn more) is called");
+            }
+
+            @Override
+            public void onSuccess(float version, @NonNull String downloadLink) {
+                throw new IllegalStateException("onSuccess (float) is called");
+            }
+
+            @Override
+            public void onSuccess(float version, @NonNull String downloadLink, String learnMoreLink) {
+                throw new IllegalStateException("onSuccess (float w/h learn more) is called");
+            }
+        };
     }
 
     /** Tests whether the GitHub endpoint will fail when there is no releases in the repository. **/
