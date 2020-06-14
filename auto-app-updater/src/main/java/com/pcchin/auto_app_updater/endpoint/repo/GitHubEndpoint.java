@@ -227,7 +227,7 @@ public class GitHubEndpoint extends Endpoint {
     @NonNull
     private Map<String, String> getGitHubHeaders() {
         Map<String, String> headers = new HashMap<>();
-        if (oAuthToken != null) headers.put("Authorization", String.format("token %s", oAuthToken));
+        if (oAuthToken != null)  headers.put("Authorization", String.format("token %s", oAuthToken));
         headers.put("User-agent", userAgent);
         return headers;
     }

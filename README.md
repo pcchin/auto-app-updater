@@ -28,8 +28,7 @@ implementation 'com.pcchin.auto-app-updater:auto-app-updater:1.0.0'
 
 ## Test endpoints
 Certain repos are created on [GitHub](https://github.com/aau-test), [Gitea](https://git.pcchin.com/aau-test) and [GitLab](https://gitlab.com/aau-test) to test whether the endpoints are working.
- If you wish to gain access to the private repositories on those repos for testing purposes,
- just send me a message or open a issue on the repository and I can add you as a collaborator to those repositories.
+ Feel free to use them for testing purposes.
 
 ## Contribution
 Any contribution is welcome, feel free to add any issues or pull requests to the repository.
