@@ -34,7 +34,7 @@ public class MainActivity extends AppCompatActivity {
             findViewById(R.id.testEndpoints).setOnClickListener(view -> {
                 Toast.makeText(MainActivity.this, "View results through Logcat", Toast.LENGTH_SHORT).show();
                 // The auth keys and tokens here are just for testing, no need to insert your own
-                new Thread(() -> new GiteaEndpointTest(MainActivity.this)).start();
+                new Thread(() -> new GiteaEndpointTest(MainActivity.this, null, null)).start();
                 new Thread(() -> new GitHubEndpointTest(MainActivity.this, null)).start();
                 new Thread(() -> new GitLabEndpointTest(MainActivity.this, null, null)).start();
                 new Thread(() -> new JSONArrayEndpointTest(MainActivity.this)).start();

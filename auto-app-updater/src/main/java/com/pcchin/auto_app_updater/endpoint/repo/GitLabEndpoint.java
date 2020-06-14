@@ -147,10 +147,14 @@ public class GitLabEndpoint extends Endpoint {
             JSONObject currentObject = linksList.getJSONObject(i);
             String linkName = currentObject.getString("name");
             if (linkName.endsWith(".apk")) {
-                downloadLink = currentObject.getString("url");
+                downloadLink = currentObject.getString("direct_asset_url");
                 break;
             }
         }
+        if (authMethod == GitLabAuth.PRIVATE_TOKEN) updateDialog.setAuth("Private-Token", String.format("%s", authString));
+        else if (authMethod == GitLabAuth.OAUTH2) updateDialog.setAuth("Authorization", String.format("Bearer %s", authString));
+        updateDialog.setReleaseInfo(targetObject.getString("description"));
+        updateDialog.setLearnMoreUrl(targetObject.getJSONObject("_links").getString("self"));
         if (downloadLink == null) throw new IllegalStateException("Asset download link not found in GitHub release!");
         if (super.updateType == AutoAppUpdater.UpdateType.DIFFERENCE) onSuccess(versionTag, downloadLink);
         else if (super.updateType == AutoAppUpdater.UpdateType.INCREMENTAL) onSuccess(Integer.parseInt(versionTag), downloadLink);

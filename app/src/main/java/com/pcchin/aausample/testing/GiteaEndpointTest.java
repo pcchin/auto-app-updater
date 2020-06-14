@@ -15,15 +15,24 @@ package com.pcchin.aausample.testing;
 
 import android.content.Context;
 
+import com.android.volley.RequestQueue;
+import com.android.volley.toolbox.Volley;
+
 /** Tests to see if the Gitea endpoint performs as expected.
  * The tests can't be put in androidTest as listeners are needed to be used. **/
 public class GiteaEndpointTest {
-    private Context context;
+    private RequestQueue queue;
+    private String token;
+    private String oAuth2;
 
     /** Default constructor. Starts all the test functions. **/
-    public GiteaEndpointTest(Context context) {
-        this.context = context;
+    public GiteaEndpointTest(Context context, String token, String oAuth2) {
+        this.queue = Volley.newRequestQueue(context);
+        this.token = token;
+        this.oAuth2 = oAuth2;
         testGiteaSuccess();
+        if (this.token != null) testGiteaToken();
+        if (this.oAuth2 != null) testGiteaOAuth();
         testGiteaNoReleases();
         testGiteaDraftsOnly();
         testGiteaNoPermission();
@@ -36,6 +45,16 @@ public class GiteaEndpointTest {
         // Test public repository (Stable + Pre-release)
         // Test public repository (Combined)
         // Test private repository (Combined)
+    }
+
+    /** Tests whether the Gitea endpoint is able to work successfully on a private repository with the given token. **/
+    private void testGiteaToken() {
+
+    }
+
+    /** Tests whether the Gitea endpoint is able to work successfully on a private repository with the given OAuth2 token. **/
+    private void testGiteaOAuth() {
+
     }
 
     /** Tests whether the Gitea endpoint will fail when there is no releases in the repository. **/

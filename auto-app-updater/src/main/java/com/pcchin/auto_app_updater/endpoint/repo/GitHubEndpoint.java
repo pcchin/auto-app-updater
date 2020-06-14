@@ -54,29 +54,28 @@ public class GitHubEndpoint extends Endpoint {
      * @param repoPath The path for the repository in the form of user/repo.
      * @param isPrerelease Whether to include pre releases in the version check. **/
     public GitHubEndpoint(String repoPath, boolean isPrerelease) {
-        this(repoPath, isPrerelease, "https://api.github.com");
+        this(repoPath, isPrerelease, null);
     }
 
     /** Default constructor with the repo path and whether to include pre-releases specified.
-     * No OAuth2 token will be used.
      * @param repoPath The path for the repository in the form of user/repo.
      * @param isPrerelease Whether to include pre releases in the version check.
+     * @param oAuthToken The oAuth2 token to access the repo (Only use this if you can ensure that your token would not be leaked), can be null. **/
+    public GitHubEndpoint(String repoPath, boolean isPrerelease, String oAuthToken) {
+        this(repoPath, isPrerelease, oAuthToken, "https://api.github.com");
+    }
+
+    /** Default constructor with the repo path and whether to include pre-releases specified.
+     * @param repoPath The path for the repository in the form of user/repo.
+     * @param isPrerelease Whether to include pre releases in the version check.
+     * @param oAuthToken The oAuth2 token to access the repo (Only use this if you can ensure that your token would not be leaked), can be null.
      * @param apiPath The path to access the API (Include https:// and without / at the end). **/
-    public GitHubEndpoint(String repoPath, boolean isPrerelease, String apiPath) {
-        this(repoPath, isPrerelease, apiPath, null);
-    }
-
-    /** Default constructor with the repo path and whether to include pre-releases specified.
-     * @param repoPath The path for the repository in the form of user/repo.
-     * @param isPrerelease Whether to include pre releases in the version check.
-     * @param apiPath The path to access the API (Include https:// and without / at the end).
-     * @param oAuthToken The oAuth2 token to access the repo. (Only use this if you can ensure that your token would not be leaked) **/
-    public GitHubEndpoint(String repoPath, boolean isPrerelease, String apiPath, String oAuthToken) {
+    public GitHubEndpoint(String repoPath, boolean isPrerelease, String oAuthToken, String apiPath) {
         super();
         this.repoPath = repoPath;
         this.isPrerelease = isPrerelease;
-        this.apiPath = apiPath;
         this.oAuthToken = oAuthToken;
+        this.apiPath = apiPath;
     }
 
     //****** Start of overridden functions ******//
@@ -201,7 +200,8 @@ public class GitHubEndpoint extends Endpoint {
 
     /** Parses a specific release to get the version and download info.
      * @param response The JSON object for a specific GitHub release. **/
-    private void parseRelease(@NonNull JSONObject response) throws JSONException, NumberFormatException, IllegalStateException {
+    private void parseRelease(@NonNull JSONObject response) throws JSONException,
+            NumberFormatException, IllegalStateException {
         String versionTag = response.getString("tag_name"), downloadLink = null;
         JSONArray assetsList = response.getJSONArray("assets");
         for (int i = 0; i < assetsList.length(); i++) {
@@ -212,6 +212,7 @@ public class GitHubEndpoint extends Endpoint {
                 break;
             }
         }
+        if (oAuthToken != null)  updateDialog.setAuth("Authorization", String.format("token %s", oAuthToken));
         updateDialog.setReleaseInfo(response.getString("body"));
         updateDialog.setLearnMoreUrl(response.getString("html_url"));
         if (downloadLink == null) throw new IllegalStateException("Asset download link not found in GitHub release!");

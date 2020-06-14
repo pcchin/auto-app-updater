@@ -51,7 +51,7 @@ public class GiteaEndpoint extends Endpoint {
     public enum GiteaAuth {
         /** No authentication. **/
         NONE,
-        /** Authorization via an API key token **/
+        /** Authorization via an API key token. **/
         TOKEN,
         /** Access token that is obtained from Gitea's OAuth2 provider. **/
         OAUTH2
@@ -167,6 +167,8 @@ public class GiteaEndpoint extends Endpoint {
                 break;
             }
         }
+        if (authMethod == GiteaAuth.TOKEN) updateDialog.setAuth("Authorization", String.format("token %s", authString));
+        else if (authMethod == GiteaAuth.OAUTH2) updateDialog.setAuth("Authorization", String.format("bearer %s", authString));
         updateDialog.setReleaseInfo(response.getString("body"));
         updateDialog.setLearnMoreUrl(String.format("%s/%s/releases", apiPath, repoPath));
         if (downloadLink == null) throw new IllegalStateException("Asset download link not found in GitHub release!");

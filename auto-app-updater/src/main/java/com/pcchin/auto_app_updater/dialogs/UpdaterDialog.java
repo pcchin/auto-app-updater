@@ -26,6 +26,8 @@ import androidx.fragment.app.DialogFragment;
 
 import com.pcchin.auto_app_updater.utils.APKDownloader;
 
+import java.util.HashMap;
+
 public class UpdaterDialog extends DialogFragment {
     private boolean rotatable = true;
     private Dialog dialog;
@@ -34,6 +36,8 @@ public class UpdaterDialog extends DialogFragment {
     private String currentVersion;
     private String newVersion;
     private String downloadLink;
+    private String authParam;
+    private String authString;
     private String updateMessage = "A newer version of the app is available. Would you like to update to the latest version?";
     private boolean showReleaseInfo = false;
     private String releaseInfo = "";
@@ -109,11 +113,15 @@ public class UpdaterDialog extends DialogFragment {
                }
            });
        }
+
+        final HashMap<String, String> dlParams = new HashMap<>();
+       if (authParam != null && authString != null) dlParams.put(authParam, authString);
        builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
            @Override
            public void onClick(DialogInterface dialog, int which) {
                dialog.dismiss();
-               APKDownloader downloader = new APKDownloader(requireContext(), getFragmentManager(), downloadLink, contentProvider);
+               APKDownloader downloader = new APKDownloader(requireContext(), getFragmentManager(),
+                       downloadLink, contentProvider, dlParams);
                downloader.setShowDownloadDialog(showDownloadingDialog);
                downloader.start();
            }
@@ -186,6 +194,14 @@ public class UpdaterDialog extends DialogFragment {
     /** Sets the newer version of the app. This is only used as the value for Template.NEW_VERSION. **/
     public void setNewVersion(String newVersion) {
         this.newVersion = newVersion;
+    }
+
+    /** Sets the authorization required to access the APK that will be downloaded.
+     * @param authParam The header name of the authorization (eg. Private-Token / Authorization)
+     * @param authString The value that will be sent along with the header name. **/
+    public void setAuth(String authParam, String authString) {
+        this.authParam = authParam;
+        this.authString = authString;
     }
 
     /** Message templates that will be replaced with specific values in the message section of the dialog. **/

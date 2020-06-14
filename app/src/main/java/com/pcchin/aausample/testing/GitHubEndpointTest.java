@@ -191,7 +191,7 @@ public class GitHubEndpointTest {
     /** Tests whether the GitHub endpoint is able to work successfully for private repositories. **/
     private void testGitHubPrivate() {
         // Test private repository (Combined)
-        GitHubEndpoint endpoint = new GitHubEndpoint("aau-test/private-combined", false) {
+        GitHubEndpoint endpoint = new GitHubEndpoint("aau-test/private-combined", false, authKey) {
             // The correct one
             @Override
             public void onSuccess(@NonNull String version, @NonNull String downloadLink) {
@@ -231,6 +231,9 @@ public class GitHubEndpointTest {
                 throw new IllegalStateException("onSuccess (float w/h learn more) is called");
             }
         };
+        endpoint.setCurrentVersion("1.0.1", false);
+        endpoint.setRequestQueue(queue);
+        endpoint.update();
     }
 
     /** Tests whether the GitHub endpoint will fail when there is no releases in the repository. **/
