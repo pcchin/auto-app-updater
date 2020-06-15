@@ -61,6 +61,14 @@ public class GiteaEndpoint extends Endpoint {
 
     /** Default constructor with the repo path and whether to include pre-releases specified.
      * The API path is assumed to be https://try.gitea.io and no tokens will be used.
+     * No pre releases will be included in the version check.
+     * @param repoPath The path for the repository in the form of user/repo. **/
+    public GiteaEndpoint(String repoPath) {
+        this(repoPath, false);
+    }
+
+    /** Default constructor with the repo path and whether to include pre-releases specified.
+     * The API path is assumed to be https://try.gitea.io and no tokens will be used.
      * @param repoPath The path for the repository in the form of user/repo.
      * @param isPreRelease Whether to include pre releases in the version check. **/
     public GiteaEndpoint(String repoPath, boolean isPreRelease) {
@@ -172,9 +180,9 @@ public class GiteaEndpoint extends Endpoint {
         updateDialog.setReleaseInfo(response.getString("body"));
         updateDialog.setLearnMoreUrl(String.format("%s/%s/releases", apiPath, repoPath));
         if (downloadLink == null) throw new IllegalStateException("Asset download link not found in GitHub release!");
-        if (super.updateType == AutoAppUpdater.UpdateType.DIFFERENCE) onSuccess(versionTag, downloadLink);
+        if (super.updateType == AutoAppUpdater.UpdateType.DECIMAL_INCREMENTAL) onSuccess(Float.parseFloat(versionTag), downloadLink);
         else if (super.updateType == AutoAppUpdater.UpdateType.INCREMENTAL) onSuccess(Integer.parseInt(versionTag), downloadLink);
-        else onSuccess(Float.parseFloat(versionTag), downloadLink);
+        else onSuccess(versionTag, downloadLink);
     }
 
     //****** Start of custom functions ******//

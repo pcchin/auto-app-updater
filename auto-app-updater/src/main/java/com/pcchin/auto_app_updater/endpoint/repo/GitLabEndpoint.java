@@ -75,6 +75,15 @@ public class GitLabEndpoint extends Endpoint {
     }
 
     /** Default constructor with the repo path and whether to include pre-releases specified.
+     * The API path is assumed to be https://gitlab.com.
+     * @param projectId The ID for the repository required.
+     * @param authMethod The method which is used to authorize the app.
+     * @param authString The access token / oAuth2 token to access the repo. (Only use this if you can ensure that your token would not be leaked) **/
+    public GitLabEndpoint(int projectId, GitLabAuth authMethod, String authString) {
+        this(projectId, "https://gitlab.com", authMethod, authString);
+    }
+
+    /** Default constructor with the repo path and whether to include pre-releases specified.
      * @param projectId The ID for the repository required.
      * @param apiPath The path to access the API (Include https:// and without / at the end).
      * @param authMethod The method which is used to authorize the app.
@@ -89,10 +98,10 @@ public class GitLabEndpoint extends Endpoint {
 
     //****** Start of overridden functions ******//
 
-    /** Gets all the releases from /api/v1/repos/.../releases. **/
+    /** Gets all the releases from /api/v4/projects/.../releases. **/
     @Override
     public Request<?> getRequest() {
-        return new JsonArrayRequest(Request.Method.GET, String.format("%s/api/v4/repos/%s/releases",
+        return new JsonArrayRequest(Request.Method.GET, String.format("%s/api/v4/projects/%s/releases",
                 apiPath, projectId), null, new Response.Listener<JSONArray>() {
             @Override
             public void onResponse(JSONArray response) {
@@ -156,9 +165,9 @@ public class GitLabEndpoint extends Endpoint {
         updateDialog.setReleaseInfo(targetObject.getString("description"));
         updateDialog.setLearnMoreUrl(targetObject.getJSONObject("_links").getString("self"));
         if (downloadLink == null) throw new IllegalStateException("Asset download link not found in GitHub release!");
-        if (super.updateType == AutoAppUpdater.UpdateType.DIFFERENCE) onSuccess(versionTag, downloadLink);
+        if (super.updateType == AutoAppUpdater.UpdateType.DECIMAL_INCREMENTAL) onSuccess(Float.parseFloat(versionTag), downloadLink);
         else if (super.updateType == AutoAppUpdater.UpdateType.INCREMENTAL) onSuccess(Integer.parseInt(versionTag), downloadLink);
-        else onSuccess(Float.parseFloat(versionTag), downloadLink);
+        else onSuccess(versionTag, downloadLink);
     }
 
     //****** Start of custom functions ******//

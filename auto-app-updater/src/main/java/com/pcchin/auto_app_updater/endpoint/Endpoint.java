@@ -74,8 +74,16 @@ public abstract class Endpoint {
 
     /** Sets the current version of the app from within AutoAppUpdater.
      * This function does not need to be called manually.
+     * The version of the app is assumed to use semantic versioning.
+     * @param version The current version of the app. **/
+    public void setCurrentVersion(String version) {
+        setCurrentVersion(version, true);
+    }
+
+    /** Sets the current version of the app from within AutoAppUpdater.
+     * This function does not need to be called manually.
      * @param version The current version of the app.
-     * @param isSemantic Whether semantic version is used for the updater. **/
+     * @param isSemantic Whether semantic versioning is used for the updater. **/
     public void setCurrentVersion(String version, boolean isSemantic) {
         if (isSemantic) {
             this.updateType = AutoAppUpdater.UpdateType.SEMANTIC;
