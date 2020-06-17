@@ -51,7 +51,7 @@ bintray {
 
     pkg {
         repo = 'auto-app-updater'
-        name = 'com.pcchin.auto-app-updater'
+        name = 'auto-app-updater'
         configurations = ['archives']
         desc = 'An Android library that allows for easy updating of the app through endpoints such as GitHub, JSON, XML etc.'
         websiteUrl = 'https://github.com/pcchin/auto-app-updater'

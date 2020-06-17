@@ -13,7 +13,7 @@
 
 apply plugin: 'com.github.dcendents.android-maven'
 
-group = 'com.pcchin.customdialog'
+group = 'com.pcchin.auto-app-updater'
 
 install {
     repositories.mavenInstaller {

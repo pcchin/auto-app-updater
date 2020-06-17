@@ -22,7 +22,6 @@ import androidx.fragment.app.FragmentManager;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.pcchin.auto_app_updater.AutoAppUpdater;
-import com.pcchin.auto_app_updater.BuildConfig;
 import com.pcchin.auto_app_updater.utils.UpdaterDialog;
 
 import de.skuzzle.semantic.Version;
@@ -31,9 +30,10 @@ import de.skuzzle.semantic.Version;
  * Extend this class to build your own endpoints. **/
 public abstract class Endpoint {
     /* Example user agent: "AutoAppUpdater/1.0.0 (...)" */
+    // Version needs to be changed manually here
     @SuppressWarnings("ConstantConditions")
     public static final String USER_AGENT = System.getProperty("http.agent","")
-            .replaceAll("^.+?/\\S+", String.format("AutoAppUpdater/%s", BuildConfig.VERSION_NAME));
+            .replaceAll("^.+?/\\S+", "AutoAppUpdater/1.0.0");
 
     // The endpoint that will be called if this endpoint fails.
     protected Endpoint backupEndpoint;
