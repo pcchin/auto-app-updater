@@ -44,6 +44,22 @@
             android:layout_marginBottom="5sp"
             android:background="@android:color/darker_gray" />
 
+        <Button
+            android:id="@+id/run_github_update"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="5sp"
+            android:layout_marginBottom="5sp"
+            android:text="@string/run_github_update" />
+
+        <Button
+            android:id="@+id/run_github_gitlab_update"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="5sp"
+            android:layout_marginBottom="5sp"
+            android:text="@string/run_github_gitlab_update" />
+
         <View
             android:id="@+id/divider2"
             android:layout_width="match_parent"

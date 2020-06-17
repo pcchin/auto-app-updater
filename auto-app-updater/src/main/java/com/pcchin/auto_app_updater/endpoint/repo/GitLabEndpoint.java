@@ -38,6 +38,7 @@ import java.util.Map;
  * If the update type is UpdateType.INCREMENTAL, tag_name must be an integer.
  * If the update type is UpdateType.DECIMAL_INCREMENTAL, tag_name must be a valid number.
  * Only the latest release will be taken into account.
+ * This endpoint cannot be used on migrated repositories.
  * The release info and learn more link would not be shown unless the boolean values
  *  for them are set in the corresponding UpdateDialog. **/
 public class GitLabEndpoint extends Endpoint {

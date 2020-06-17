@@ -15,20 +15,22 @@ package com.pcchin.auto_app_updater;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.util.Log;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RestrictTo;
 import androidx.fragment.app.FragmentManager;
 
 import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.Volley;
-import com.pcchin.auto_app_updater.dialogs.UpdaterDialog;
 import com.pcchin.auto_app_updater.endpoint.Endpoint;
 import com.pcchin.auto_app_updater.utils.APKDownloader;
+import com.pcchin.auto_app_updater.utils.UpdaterDialog;
 import com.pcchin.auto_app_updater.utils.UpdaterFunctions;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
@@ -37,6 +39,7 @@ import java.util.Set;
  * This is the class that should be started first when running the updater. **/
 public class AutoAppUpdater {
     private Context context;
+    private ErrorListener listener;
 
     private int updateInterval; // The update interval for the app (In seconds).
     private List<Endpoint> endpointList; // All the possible endpoints for updating the app.
@@ -63,7 +66,7 @@ public class AutoAppUpdater {
     }
 
     /** Delete the previous APKs that are downloaded from the app. **/
-    public void deletePreviousAPKs() {
+    private void deletePreviousAPKs() {
         SharedPreferences sharedPref = context.getSharedPreferences("com.pcchin.auto_app_updater", Context.MODE_PRIVATE);
         Set<String> previousApkList = UpdaterFunctions.getApkStringSet(sharedPref);
         for (String previousApk: previousApkList) {
@@ -81,10 +84,11 @@ public class AutoAppUpdater {
         if (UpdaterFunctions.isConnected(context)) {
             SharedPreferences sharedPref = context.getSharedPreferences("com.pcchin.auto_app_updater", Context.MODE_PRIVATE);
             long lastRunTime = sharedPref.getLong("lastRunTime", 0);
-            if (((new Date().getTime() - lastRunTime) / 1000) >= updateInterval) {
+            long currentTime = new Date().getTime();
+            if (((currentTime - lastRunTime) / 1000) >= updateInterval) {
                 // Update the shared preferences
                 SharedPreferences.Editor editor = sharedPref.edit();
-                editor.putLong("lastRunTime", lastRunTime);
+                editor.putLong("lastRunTime", currentTime);
                 editor.apply();
 
                 if (endpointList.size() > 0) {
@@ -94,12 +98,24 @@ public class AutoAppUpdater {
         }
     }
 
+    /** Function that is called when all of the endpoints fail.
+     * Use an AutoAppUpdater.ErrorListener to handle the error. **/
+    @RestrictTo(RestrictTo.Scope.LIBRARY)
+    public void onFailure(Exception e) {
+        if (this.listener == null) {
+            throw new IllegalStateException("AutoAppUpdater.ErrorListener cannot be null!");
+        } else {
+            this.listener.onFailure(e);
+        }
+    }
+
     /** The builder class for creating the AutoAppUpdater.
      * The order of method calls should be
      * setUpdateType -> setCurrentVersion -> setUpdateDialog -> setDownloader -> addEndpoint / addEndpoints.
      * The full lifecycle can be found in the Wiki of the repository.**/
     public static class Builder {
         private Context bContext;
+        private ErrorListener bListener;
         private FragmentManager bFragmentManager;
         private String bFragmentTag; // The tag of the fragment that would be shown, defaults, to "AutoAppUpdater".
 
@@ -135,10 +151,19 @@ public class AutoAppUpdater {
             this.bUpdateType = UpdateType.DIFFERENCE;
             this.bFragmentTag = tag;
             this.bUpdateInterval = 60 * 60 * 24;
-            this.bUpdateDialog = new UpdaterDialog(contentProvider);
+            this.bUpdateDialog = new UpdaterDialog(context, contentProvider);
             this.bFragmentManager = manager;
             this.bQueue = Volley.newRequestQueue(context);
             this.bContentProvider = contentProvider;
+            this.bListener = new ErrorListener() {
+                @Override
+                public void onFailure(Exception e) {
+                    Log.w("AutoAppUpdater", String.format("Attempt to update app failed " +
+                            "with error %s, stack trace is ", e.getMessage()));
+                    e.printStackTrace();
+                    Toast.makeText(bContext, "Network Error", Toast.LENGTH_SHORT).show();
+                }
+            };
         }
 
         /** Sets the update type of the updater.
@@ -259,10 +284,17 @@ public class AutoAppUpdater {
             return this;
         }
 
+        /** Sets the error listener which deals with the error thrown by the endpoint.
+         * @param errorListener The error listener that handles the error. **/
+        public Builder setErrorListener(ErrorListener errorListener) {
+            this.bListener = errorListener;
+            return this;
+        }
+
         /** Sets the properties of the endpoint before passing them on to the app updater.
          * @param endpoint The endpoint that will be added to the app updater. **/
         private void setEndpointProperties(@NonNull Endpoint endpoint) {
-            endpoint.setContentProvider(bContentProvider);
+            endpoint.setContentProvider(bContext, bContentProvider);
             endpoint.setUpdateDialog(bUpdateDialog, bFragmentManager, bFragmentTag);
             if (bUpdateType == UpdateType.SEMANTIC) {
                 endpoint.setCurrentVersion(bCurrentVersionStr, true);
@@ -287,24 +319,23 @@ public class AutoAppUpdater {
             }
         }
 
-        /** Sets up the chain of endpoints which depend on one another. **/
-        private void initEndpointList() {
-            Collections.reverse(this.bEndpointList);
-            for (int i = 0; i < this.bEndpointList.size(); i++) {
-                if (i + 1 < this.bEndpointList.size()) {
-                    this.bEndpointList.get(i).setBackupEndpoint(this.bEndpointList.get(i + 1));
-                }
-            }
-            Collections.reverse(this.bEndpointList);
-        }
-
         /** Creates the Auto App Updater based on the parameters given. **/
-        public AutoAppUpdater create() {
+        public AutoAppUpdater build() {
             AutoAppUpdater updater = new AutoAppUpdater(bContext);
-            initEndpointList();
             updater.endpointList = this.bEndpointList;
+            for (int i = updater.endpointList.size() - 1; i > 0; i--) {
+                updater.endpointList.get(i - 1).setBackupEndpoint(updater.endpointList.get(i));
+            }
             updater.updateInterval = this.bUpdateInterval;
+            updater.listener = bListener;
             return updater;
         }
+    }
+
+    /** The class that handles the error returned by the endpoint. **/
+    public abstract static class ErrorListener {
+        /** The function that is called when the error is returned by the endpoint.
+         * @param e The exception that is thrown by the endpoint. **/
+        public abstract void onFailure(Exception e);
     }
 }

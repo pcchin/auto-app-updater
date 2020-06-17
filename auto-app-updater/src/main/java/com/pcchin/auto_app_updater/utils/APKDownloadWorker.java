@@ -18,6 +18,7 @@ import android.app.NotificationManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
@@ -27,6 +28,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.core.app.NotificationCompat;
 import androidx.core.content.FileProvider;
+import androidx.work.Data;
 import androidx.work.ForegroundInfo;
 import androidx.work.Worker;
 import androidx.work.WorkerParameters;
@@ -54,11 +56,11 @@ import java.util.concurrent.ExecutionException;
  * DOWNLOAD_PATH (String): The path that the APK will be downloaded to.
  * HEADER_KEYS (String[]): The keys used for the headers in the request that is used to download the file.
  * HEADER_VALUES (String[]): The values for the keys in HEADER_KEYS. Should be the same length as HEADER_KEYS.
+ * MAX_RETRY (int): The maximum amount of tries that the worker will run before giving up, defaults to 5.
  * NOTIF_TITLE (String): The title of the notification that will be shown.
  * NOTIF_ICON (int): The icon that will be used when displaying the notification.
  * NOTIF_CHANNEL (String): The channel that is used to display the notification.
- * NOTIF_MSG (String): The message of the notification that will be shown.
- * SHOW_APP_ICON (boolean): Whether to show the logo of the app when updating, defaults to false. **/
+ * NOTIF_MSG (String): The message of the notification that will be shown. **/
 public class APKDownloadWorker extends Worker {
     public static final String APK_DOWNLOAD_WORKER = "APKDownloadWorker";
     private static final String FILE_ERROR = "File Error";
@@ -68,16 +70,15 @@ public class APKDownloadWorker extends Worker {
     public static final String DOWNLOAD_PATH = "downloadPath";
     public static final String HEADER_KEYS = "headerKeys";
     public static final String HEADER_VALUES = "headerValues";
+    public static final String MAX_RETRY = "maxRetryCount";
     public static final String NOTIF_TITLE = "notifTitle";
     public static final String NOTIF_MSG = "notifMsg";
     public static final String NOTIF_ICON = "notifIcon";
     public static final String NOTIF_CHANNEL = "notifChannel";
-    public static final String SHOW_NOTIF_ICON = "showNotifIcon";
 
     private Context context;
 
     // Notification variables
-    private boolean showNotifIcon;
     private int notifIcon;
     private String notifTitle;
     private String notifMsg;
@@ -105,18 +106,16 @@ public class APKDownloadWorker extends Worker {
     @NonNull
     @Override
     public Result doWork() {
+        // Check max retry count
+        int maxRetryCount = getInputData().getInt(MAX_RETRY, 5);
+        if (getRunAttemptCount() > maxRetryCount) return Result.failure(new Data.Builder()
+            .putString("message", "Max retry count reached for APKDownloadWorker").build());
         // Check if the required values are present within the input data
-        contentProvider = getInputData().getString(CONTENT_PROVIDER);
-        downloadUrl = getInputData().getString(DOWNLOAD_URL);
-        downloadPath = getInputData().getString(DOWNLOAD_PATH);
-        headerKeys = getInputData().getStringArray(HEADER_KEYS);
-        headerValues = getInputData().getStringArray(HEADER_VALUES);
-        notifTitle = getInputData().getString(NOTIF_TITLE);
-        notifMsg = getInputData().getString(NOTIF_MSG);
-        notifIcon = getInputData().getInt(NOTIF_ICON, 0);
-        notifChannel = getInputData().getString(NOTIF_CHANNEL);
-        showNotifIcon = getInputData().getBoolean(SHOW_NOTIF_ICON, false);
-        if (!UpdaterFunctions.isConnected(context) || inputDataIsNull()) return Result.failure();
+        populateValues();
+        if (!UpdaterFunctions.isConnected(context)) return Result.failure(new Data.Builder()
+                .putString("message", "APKDownloadWorker not connected to the internet").build());
+        if (inputDataIsNull()) return Result.failure(new Data.Builder()
+                .putString("message", "Some of the required data are not provided in APKDownloadWorker").build());
         // Populate the headers
         downloadHeaders = new HashMap<>();
         for (int i = 0; i < headerKeys.length; i++) {
@@ -125,6 +124,19 @@ public class APKDownloadWorker extends Worker {
         // Shows the notification
         showNotif();
         return runDownloader();
+    }
+
+    /** Populate the required values passed from the APK Downloader. **/
+    private void populateValues() {
+        contentProvider = getInputData().getString(CONTENT_PROVIDER);
+        downloadUrl = getInputData().getString(DOWNLOAD_URL);
+        downloadPath = getInputData().getString(DOWNLOAD_PATH);
+        headerKeys = getInputData().getStringArray(HEADER_KEYS);
+        headerValues = getInputData().getStringArray(HEADER_VALUES);
+        notifTitle = getInputData().getString(NOTIF_TITLE);
+        notifMsg = getInputData().getString(NOTIF_MSG);
+        notifIcon = getInputData().getInt(NOTIF_ICON, android.R.drawable.stat_sys_download);
+        notifChannel = getInputData().getString(NOTIF_CHANNEL);
     }
 
     /** Show the notification that will be displayed on top of the screen.
@@ -141,7 +153,7 @@ public class APKDownloadWorker extends Worker {
         }
         // Creates the notification
         NotificationCompat.Builder builder = new NotificationCompat.Builder(context, context.getPackageName());
-        if (showNotifIcon) builder.setSmallIcon(notifIcon);
+        builder.setSmallIcon(notifIcon);
         builder.setContentTitle(notifTitle);
         builder.setContentText(notifMsg);
         builder.setTicker(notifTitle);
@@ -157,13 +169,13 @@ public class APKDownloadWorker extends Worker {
     private boolean inputDataIsNull() {
         return contentProvider == null || downloadUrl == null || downloadPath == null
                 || headerKeys == null || headerValues == null
-                || (headerKeys.length != headerValues.length) || notifTitle == null
-                || notifMsg == null || notifChannel == null;
+                || (headerKeys.length != headerValues.length)
+                || notifTitle == null || notifMsg == null || notifChannel == null;
     }
 
     /** Runs the downloader and installer for the APK.
      * Returns Result.success() if the downloader and installer is able to start successfully,
-     * and Result.retry() if the download fails due to a network error (VolleyError),
+     * and Result.retry() if the download fails due to a network error (ExecutionException),
      * and Result.failure() for all other errors. **/
     @NonNull
     private Result runDownloader() {
@@ -179,7 +191,7 @@ public class APKDownloadWorker extends Worker {
         } catch (InterruptedException e) {
             Log.w(APK_DOWNLOAD_WORKER, "Error: Volley download request interrupted with error");
             e.printStackTrace();
-            return Result.retry();
+            return Result.failure(new Data.Builder().putString("message", e.getMessage()).build());
         } catch (ExecutionException e) {
             Log.w(APK_DOWNLOAD_WORKER, "Error: Volley download request failed in middle of operation with error");
             e.printStackTrace();
@@ -188,7 +200,7 @@ public class APKDownloadWorker extends Worker {
             Log.w(APK_DOWNLOAD_WORKER, String.format("%s: An IOException occurred at %s, stack trace is", FILE_ERROR, downloadPath));
             e.printStackTrace();
             showToast(FILE_ERROR);
-            return Result.failure();
+            return Result.failure(new Data.Builder().putString("message", e.getMessage()).build());
         }
     }
 
@@ -241,12 +253,19 @@ public class APKDownloadWorker extends Worker {
     }
 
     /** Installs the new app from the given file path.
+     * The URIs are different due to https://stackoverflow.com/a/51119606
      * @param outputFile The APK file that was just downloaded. **/
     private void installApp(File outputFile) {
         showToast("Updating app...");
         Intent installIntent = new Intent(Intent.ACTION_VIEW);
-        installIntent.setDataAndType(FileProvider.getUriForFile(context,
-                contentProvider, outputFile), "application/vnd.android.package-archive");
+        if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            installIntent.setDataAndType(FileProvider.getUriForFile(context,
+                    contentProvider, outputFile), "application/vnd.android.package-archive");
+        } else {
+            installIntent.setDataAndType(Uri.parse(String.format("file://%s",
+                    outputFile.getAbsolutePath())), "application/vnd.android.package-archive");
+        }
+        installIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         installIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
         context.startActivity(installIntent);
     }

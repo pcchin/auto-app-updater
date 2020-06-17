@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
 <!--
   ~ Copyright 2020 PC Chin. All rights reserved.
   ~ Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,11 +12,12 @@
   ~ limitations under the License.
   -->
 
-<resources>
-    <string name="app_name">Auto App Updater Sample</string>
-    <string name="test_endpoints">Test Endpoints</string>
-    <string name="show_update_dialog">Show Update Dialog</string>
-    <string name="show_downloading">Show Downloading Dialog</string>
-    <string name="run_github_update">Update from GitHub</string>
-    <string name="run_github_gitlab_update">Update from GitHub &amp; GitLab</string>
-</resources>
+<!-- Insert your required paths here based on the path that the APK will be downloaded to,
+     but by default the files-path option should be sufficient if the output file path remains unchanged. -->
+<paths>
+    <files-path name="internal-files" path="."/>
+    <cache-path name="cache-files" path="./cache" />
+    <external-path name="external-files" path="/" />
+    <external-cache-path name="external-cache" path="." />
+    <external-media-path name="external-media" path="." />
+</paths>

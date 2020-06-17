@@ -13,6 +13,7 @@
 
 package com.pcchin.auto_app_updater.endpoint;
 
+import android.content.Context;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -22,12 +23,12 @@ import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.pcchin.auto_app_updater.AutoAppUpdater;
 import com.pcchin.auto_app_updater.BuildConfig;
-import com.pcchin.auto_app_updater.dialogs.UpdaterDialog;
+import com.pcchin.auto_app_updater.utils.UpdaterDialog;
 
 import de.skuzzle.semantic.Version;
 
 /** The endpoint used to get the updater service.
- * Extend this class to create your own endpoints. **/
+ * Extend this class to build your own endpoints. **/
 public abstract class Endpoint {
     /* Example user agent: "AutoAppUpdater/1.0.0 (...)" */
     @SuppressWarnings("ConstantConditions")
@@ -36,6 +37,7 @@ public abstract class Endpoint {
 
     // The endpoint that will be called if this endpoint fails.
     protected Endpoint backupEndpoint;
+    protected AutoAppUpdater updater;
     protected AutoAppUpdater.UpdateType updateType;
     protected UpdaterDialog updateDialog;
     protected FragmentManager manager;
@@ -111,9 +113,10 @@ public abstract class Endpoint {
 
     /** Sets the content provider which is required to get the files.
      * This function does not needed to be called manually as it is called within AutoAppUpdater.
+     * @param context The context that is used to create the updater dialog.
      * @param provider The content provider that will be used to open the downloaded APK file. (e.g. com.pcchin.aausample.ContentProvider)**/
-    public void setContentProvider(String provider) {
-        this.updateDialog = new UpdaterDialog(provider);
+    public void setContentProvider(Context context, String provider) {
+        this.updateDialog = new UpdaterDialog(context, provider);
     }
 
     /** Sets the current queue for the request.
@@ -228,15 +231,26 @@ public abstract class Endpoint {
     /** The function that is called if the endpoint fails.
      * Override this function if you wish to handle the error yourself,
      * and call super.onFail for it to automatically fall back to the subsequent endpoints.
-     * If there is no more backup endpoints, the error would be thrown.
+     * If there is no more backup endpoints and the endpoint is added through an updater,
+     * the error would be handled within the updater.
+     * Otherwise, the error would be thrown as an IllegalStateException.
      * @param error The error that caused the endpoint to fail. **/
     public void onFailure(@NonNull Exception error) {
-        if (this.backupEndpoint == null) {
+        if (this.backupEndpoint == null && this.updater != null) {
+            this.updater.onFailure(error);
+        } else if (this.backupEndpoint == null) {
             throw new IllegalStateException(error);
         } else {
             Log.w("AutoAppUpdater", String.format("Endpoint failed with error %s, stack trace is", error.getMessage()));
             error.printStackTrace();
             this.backupEndpoint.update();
         }
+    }
+
+    /** Sets the AutoAppUpdater which would handle the error.
+     * If an updater is not found, an IllegalStateException would be thrown.
+     * @param updater The updater which handles the error. **/
+    public void setUpdater(AutoAppUpdater updater) {
+        this.updater = updater;
     }
 }

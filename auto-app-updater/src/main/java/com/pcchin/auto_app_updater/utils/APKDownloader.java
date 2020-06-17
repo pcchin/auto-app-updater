@@ -37,9 +37,14 @@ import java.util.concurrent.TimeUnit;
 public class APKDownloader {
     private Context context;
 
-    private boolean showNotifIcon;
     private int notifIcon;
-    private String downloadUrl, downloadPath, contentProvider, notifTitle, notifMsg, notifChannel;
+    private int maxRetryCount;
+    private String downloadUrl;
+    private String downloadPath;
+    private String contentProvider;
+    private String notifTitle;
+    private String notifMsg;
+    private String notifChannel;
     private Map<String, String> downloadParams;
 
     //****** Start of constructors ******//
@@ -55,10 +60,10 @@ public class APKDownloader {
         this.downloadPath = UpdaterFunctions.generateValidFile(String.format("%s%s",
                 UpdaterFunctions.getInternalDownloadDir(context), ".download"));
         this.downloadParams = new HashMap<>();
+        this.maxRetryCount = 5;
         this.notifTitle = UpdaterFunctions.getApplicationName(context);
         this.notifMsg = "Updating app";
-        this.showNotifIcon = false;
-        this.notifIcon = 0;
+        this.notifIcon = android.R.drawable.stat_sys_download;
         this.notifChannel = "Update App";
     }
 
@@ -66,25 +71,7 @@ public class APKDownloader {
 
     /** Starts the APKDownloadWorker that is used to download and install the APK. **/
     public void start() {
-        String[] keyArray = (String[]) downloadParams.keySet().toArray(), valuesArray = (String[]) downloadParams.values().toArray();
-        Data inputData = new Data.Builder()
-                .putString(APKDownloadWorker.CONTENT_PROVIDER, contentProvider)
-                .putString(APKDownloadWorker.DOWNLOAD_URL, downloadUrl)
-                .putString(APKDownloadWorker.DOWNLOAD_PATH, downloadPath)
-                .putStringArray(APKDownloadWorker.HEADER_KEYS, keyArray)
-                .putStringArray(APKDownloadWorker.HEADER_VALUES, valuesArray)
-                .putString(APKDownloadWorker.NOTIF_TITLE, notifTitle)
-                .putString(APKDownloadWorker.NOTIF_MSG, notifMsg)
-                .putInt(APKDownloadWorker.NOTIF_ICON, notifIcon)
-                .putString(APKDownloadWorker.NOTIF_CHANNEL, notifChannel)
-                .putBoolean(APKDownloadWorker.SHOW_NOTIF_ICON, showNotifIcon)
-                .build();
-        runWorker(inputData);
-    }
-
-    /** Starts the actual worker after the input data is set.
-     * @param inputData The data that will be sent to the worker. **/
-    private void runWorker(Data inputData) {
+        Data inputData = getInputData();
         Constraints constraints = new Constraints.Builder()
                 .setRequiredNetworkType(NetworkType.CONNECTED).build();
         WorkRequest request = new OneTimeWorkRequest.Builder(APKDownloadWorker.class)
@@ -102,6 +89,25 @@ public class APKDownloader {
                 }
             }
         }, Executors.newSingleThreadExecutor());
+    }
+
+    /** Gets the input data that will be passed on to the download worker. **/
+    @NonNull
+    private Data getInputData() {
+        String[] keyArray = downloadParams.keySet().toArray(new String[0]),
+                valuesArray = downloadParams.values().toArray(new String[0]);
+        return new Data.Builder()
+                .putString(APKDownloadWorker.CONTENT_PROVIDER, contentProvider)
+                .putString(APKDownloadWorker.DOWNLOAD_URL, downloadUrl)
+                .putString(APKDownloadWorker.DOWNLOAD_PATH, downloadPath)
+                .putStringArray(APKDownloadWorker.HEADER_KEYS, keyArray)
+                .putStringArray(APKDownloadWorker.HEADER_VALUES, valuesArray)
+                .putInt(APKDownloadWorker.MAX_RETRY, maxRetryCount)
+                .putString(APKDownloadWorker.NOTIF_TITLE, notifTitle)
+                .putString(APKDownloadWorker.NOTIF_MSG, notifMsg)
+                .putInt(APKDownloadWorker.NOTIF_ICON, notifIcon)
+                .putString(APKDownloadWorker.NOTIF_CHANNEL, notifChannel)
+                .build();
     }
 
     //****** Start of functions that can be overridden ******//
@@ -138,11 +144,10 @@ public class APKDownloader {
     }
 
     /** Sets the notification icon that will be shown when the worker is running.
-     * If this function is not called, no icon would be shown in the notification.
+     * If this function is not called, a placeholder icon would be shown in the notification.
      * @param notifIcon The icon that would be shown in the notification. **/
     public void setNotifIcon(int notifIcon) {
         this.notifIcon = notifIcon;
-        this.showNotifIcon = true;
     }
 
     /** Sets the notification channel that is used to display the notification for the worker,
@@ -163,5 +168,11 @@ public class APKDownloader {
      * @param downloadParams The headers used in the download request. **/
     public void setDownloadParams(Map<String, String> downloadParams) {
         this.downloadParams = downloadParams;
+    }
+
+    /** Sets the maximum amount of times the downloader will retry before failing.
+     * @param maxRetryCount The maximum retry attempts that will be tried by the downloader. **/
+    public void setMaxRetryCount(int maxRetryCount) {
+        this.maxRetryCount = maxRetryCount;
     }
 }

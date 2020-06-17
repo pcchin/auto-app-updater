@@ -11,10 +11,11 @@
  * limitations under the License.
  */
 
-package com.pcchin.auto_app_updater.dialogs;
+package com.pcchin.auto_app_updater.utils;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
@@ -22,9 +23,8 @@ import android.os.Bundle;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
 import androidx.fragment.app.DialogFragment;
-
-import com.pcchin.auto_app_updater.utils.APKDownloader;
 
 import java.util.HashMap;
 
@@ -48,16 +48,18 @@ public class UpdaterDialog extends DialogFragment {
 
     //****** Start of constructors ******//
 
-    /** Default constructor, should not be used. **/
+    /** Default constructor, should not be used outside of this library. **/
+    @RestrictTo(RestrictTo.Scope.LIBRARY)
     public UpdaterDialog() {
         setRetainInstance(true);
     }
 
     /** Default constructor.
+     * @param context The context that is used to create the APK Downloader instance.
      * @param contentProvider The content provider that will be used to open the APK file. **/
-    public UpdaterDialog(String contentProvider) {
+    public UpdaterDialog(Context context, String contentProvider) {
         setRetainInstance(true);
-        downloader = new APKDownloader(requireContext(), contentProvider);
+        downloader = new APKDownloader(context, contentProvider);
     }
 
     //****** Start of overridden functions ******//
@@ -93,18 +95,18 @@ public class UpdaterDialog extends DialogFragment {
 
     //****** Start of getters and setters ******//
 
-    /** Creates the AlertDialog that is used to create the alert.
+    /** Creates the AlertDialog that is used to build the alert.
      * Override this function to insert your own AlertDialog. **/
     public Dialog createDialog() {
        AlertDialog.Builder builder = new AlertDialog.Builder(getContext()).setTitle(title);
        if (showReleaseInfo) {
            builder.setMessage(releaseInfo);
        } else {
-           builder.setMessage(updateMessage.replaceAll(Template.RELEASE_INFO, releaseInfo)
-                   .replaceAll(Template.DOWNLOAD_URL, downloadUrl)
-                   .replaceAll(Template.LEARN_MORE_URL, learnMoreUrl)
-                   .replaceAll(Template.CURRENT_VERSION, currentVersion)
-                   .replaceAll(Template.NEW_VERSION, newVersion));
+           builder.setMessage(updateMessage.replaceAll(TemplateRegex.RELEASE_INFO, releaseInfo)
+                   .replaceAll(TemplateRegex.DOWNLOAD_URL, downloadUrl)
+                   .replaceAll(TemplateRegex.LEARN_MORE_URL, learnMoreUrl)
+                   .replaceAll(TemplateRegex.CURRENT_VERSION, currentVersion)
+                   .replaceAll(TemplateRegex.NEW_VERSION, newVersion));
        }
        if (showLearnMore) {
            // Set the neutral button to open an external URL when clicked
@@ -190,13 +192,13 @@ public class UpdaterDialog extends DialogFragment {
         this.learnMoreUrl = url;
     }
 
-    /** Sets the current version of the app. This is only used as the value for Template.CURRENT_VERSION.
+    /** Sets the current version of the app. This is only used as the value for TemplateRegex.CURRENT_VERSION.
      * @param currentVersion The current version of the app. **/
     public void setCurrentVersion(String currentVersion) {
         this.currentVersion = currentVersion;
     }
 
-    /** Sets the newer version of the app. This is only used as the value for Template.NEW_VERSION.
+    /** Sets the newer version of the app. This is only used as the value for TemplateRegex.NEW_VERSION.
      * @param newVersion The newer version of the app. **/
     public void setNewVersion(String newVersion) {
         this.newVersion = newVersion;
@@ -216,9 +218,19 @@ public class UpdaterDialog extends DialogFragment {
         this.downloader = downloader;
     }
 
-    /** Message templates that will be replaced with specific values in the message section of the dialog. **/
-    @SuppressWarnings("RegExpRedundantEscape") // Escape is actually necessary, false positive
+    /** The message templates that will be replaced with specific values in the message section of the dialog. **/
     public static class Template {
+        public static final String RELEASE_INFO = "${releaseInfo}";
+        public static final String DOWNLOAD_URL = "${downloadUrl}";
+        public static final String LEARN_MORE_URL = "${learnMoreUrl}";
+        public static final String CURRENT_VERSION = "${currentVersion}";
+        public static final String NEW_VERSION = "${newVersion}";
+    }
+
+    /** The regex for message templates that will be replaced with specific values in the message section of the dialog.
+     * This should not be used outside this library. **/
+    @SuppressWarnings("RegExpRedundantEscape") // Escape is actually necessary, false positive
+    static class TemplateRegex {
         public static final String RELEASE_INFO = "\\$\\{releaseInfo\\}";
         public static final String DOWNLOAD_URL = "\\$\\{downloadUrl\\}";
         public static final String LEARN_MORE_URL = "\\$\\{learnMoreUrl\\}";
