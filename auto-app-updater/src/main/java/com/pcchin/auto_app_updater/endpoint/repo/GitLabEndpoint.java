@@ -43,9 +43,9 @@ import java.util.Map;
 public class GitLabEndpoint extends Endpoint {
     private int projectId;
     private String apiPath;
-    private GitLabAuth authMethod;
     private String authString;
     private String userAgent = Endpoint.USER_AGENT;
+    private GitLabAuth authMethod;
 
     /** Methods of authenticating with the GitLab API. **/
     public enum GitLabAuth {

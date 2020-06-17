@@ -42,10 +42,10 @@ import java.util.Map;
 public class GiteaEndpoint extends Endpoint {
     private String repoPath;
     private String apiPath;
-    private boolean isPreRelease;
-    private GiteaAuth authMethod;
     private String authString;
     private String userAgent = Endpoint.USER_AGENT;
+    private boolean isPreRelease;
+    private GiteaAuth authMethod;
 
     /** Methods of authenticating with the Gitea API. **/
     public enum GiteaAuth {

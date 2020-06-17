@@ -44,6 +44,7 @@ dependencies {
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
 
     // Other implementations
+    implementation 'androidx.work:work-runtime:2.3.4'
     implementation 'com.android.volley:volley:1.1.1'
     implementation 'de.skuzzle:semantic-version:2.1.0'
 }

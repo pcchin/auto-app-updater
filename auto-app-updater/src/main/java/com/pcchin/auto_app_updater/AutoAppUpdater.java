@@ -23,6 +23,7 @@ import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.Volley;
 import com.pcchin.auto_app_updater.dialogs.UpdaterDialog;
 import com.pcchin.auto_app_updater.endpoint.Endpoint;
+import com.pcchin.auto_app_updater.utils.APKDownloader;
 import com.pcchin.auto_app_updater.utils.UpdaterFunctions;
 
 import java.io.File;
@@ -95,7 +96,7 @@ public class AutoAppUpdater {
 
     /** The builder class for creating the AutoAppUpdater.
      * The order of method calls should be
-     * setUpdateType -> setCurrentVersion -> setUpdateDialog -> addEndpoint / addEndpoints.
+     * setUpdateType -> setCurrentVersion -> setUpdateDialog -> setDownloader -> addEndpoint / addEndpoints.
      * The full lifecycle can be found in the Wiki of the repository.**/
     public static class Builder {
         private Context bContext;
@@ -247,6 +248,14 @@ public class AutoAppUpdater {
          *               If you wish to use a custom dialog, you would need to extend UpdaterDialog to do so. **/
         public Builder setUpdateDialog(@NonNull UpdaterDialog dialog) {
             this.bUpdateDialog = dialog;
+            return this;
+        }
+
+        /** Sets the downloader that will be used in the update dialog to download the APK.
+         * @param downloader The APK downloader that will be downloading the APK. **/
+        public Builder setDownloader(APKDownloader downloader) {
+            if (this.bUpdateDialog == null) throw new IllegalStateException("Updater dialog cannot be null!");
+            this.bUpdateDialog.setDownloader(downloader);
             return this;
         }
 

@@ -221,7 +221,7 @@ public abstract class Endpoint {
     /** Displays the AlertDialog and push notification for updating the app.
      * @param downloadLink The download link for the APK. **/
     private void updateApp(String downloadLink) {
-        updateDialog.setDownloadLink(downloadLink);
+        updateDialog.setDownloadUrl(downloadLink);
         updateDialog.show(manager, tag);
     }
 

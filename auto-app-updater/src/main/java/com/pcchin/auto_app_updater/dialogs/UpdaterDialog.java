@@ -31,20 +31,20 @@ import java.util.HashMap;
 public class UpdaterDialog extends DialogFragment {
     private boolean rotatable = true;
     private Dialog dialog;
+    private APKDownloader downloader;
 
-    private String contentProvider;
     private String currentVersion;
     private String newVersion;
-    private String downloadLink;
+    private String downloadUrl;
     private String authParam;
     private String authString;
-    private String updateMessage = "A newer version of the app is available. Would you like to update to the latest version?";
-    private boolean showReleaseInfo = false;
+    private String updateMessage = "A newer version of the app is available. Would you like to update to " +
+                    "the latest version?";
     private String releaseInfo = "";
-    private boolean showLearnMore = false;
-    private boolean showDownloadingDialog = true;
     private String learnMoreUrl = "about:blank";
     private String title = "Update App";
+    private boolean showReleaseInfo = false;
+    private boolean showLearnMore = false;
 
     //****** Start of constructors ******//
 
@@ -53,15 +53,17 @@ public class UpdaterDialog extends DialogFragment {
         setRetainInstance(true);
     }
 
-    /** Default constructor. **/
+    /** Default constructor.
+     * @param contentProvider The content provider that will be used to open the APK file. **/
     public UpdaterDialog(String contentProvider) {
         setRetainInstance(true);
-        this.contentProvider = contentProvider;
+        downloader = new APKDownloader(requireContext(), contentProvider);
     }
 
     //****** Start of overridden functions ******//
 
-    /** Creates the AlertDialog that will be displayed by the app. **/
+    /** Creates the AlertDialog that will be displayed by the app.
+     * @param savedInstanceState The previously saved app info. **/
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -78,7 +80,8 @@ public class UpdaterDialog extends DialogFragment {
     }
 
     /** Returns the set dialog.
-     * The dialog should not be overwritten here, but instead in createDialog. **/
+     * The dialog should not be overwritten here, but instead in createDialog.
+     * @param savedInstanceState The previously saved app info. **/
     @NonNull
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
@@ -98,7 +101,7 @@ public class UpdaterDialog extends DialogFragment {
            builder.setMessage(releaseInfo);
        } else {
            builder.setMessage(updateMessage.replaceAll(Template.RELEASE_INFO, releaseInfo)
-                   .replaceAll(Template.DOWNLOAD_URL, downloadLink)
+                   .replaceAll(Template.DOWNLOAD_URL, downloadUrl)
                    .replaceAll(Template.LEARN_MORE_URL, learnMoreUrl)
                    .replaceAll(Template.CURRENT_VERSION, currentVersion)
                    .replaceAll(Template.NEW_VERSION, newVersion));
@@ -120,9 +123,8 @@ public class UpdaterDialog extends DialogFragment {
            @Override
            public void onClick(DialogInterface dialog, int which) {
                dialog.dismiss();
-               APKDownloader downloader = new APKDownloader(requireContext(), getFragmentManager(),
-                       downloadLink, contentProvider, dlParams);
-               downloader.setShowDownloadDialog(showDownloadingDialog);
+               downloader.setDownloadParams(dlParams);
+               downloader.setDownloadUrl(downloadUrl);
                downloader.start();
            }
        });
@@ -135,63 +137,67 @@ public class UpdaterDialog extends DialogFragment {
        return builder.create();
     }
 
-    /** Sets whether the fragment is rotatable. The default is set to true. **/
+    /** Sets whether the fragment is rotatable. The default is set to true.
+     * @param rotatable Whether the fragment is rotatable. **/
     public void setRotatable(boolean rotatable) {
         this.rotatable = rotatable;
     }
 
-    /** Sets the title for the Updater Dialog. Defaults to 'Update App'. **/
+    /** Sets the title for the Updater Dialog. Defaults to 'Update App'.
+     * @param title The title for the updater dialog. **/
     public void setTitle(String title) {
         this.title = title;
     }
 
-    /** Sets the download link for the app.
-     * This function does not need to be called manually. **/
-    public void setDownloadLink(String link) {
-        this.downloadLink = link;
-    }
-
-    /** Sets whether the Downloading... dialog would be shown. **/
-    public void setShowDownloadingDialog(boolean showDialog) {
-        this.showDownloadingDialog = showDialog;
-    }
-
     /** Sets the update message for the app. Certain templates can be used.
-     * The possible templates that can be used are found in MessageTemplate.class. **/
+     * The possible templates that can be used are found in MessageTemplate.class.
+     * @param updateMessage The update message for the app. **/
     public void setUpdateMessage(String updateMessage) {
         this.updateMessage = updateMessage;
     }
 
+    /** Sets the URL that is used to download the APK.
+     * @param downloadUrl The URL used to download the APK. **/
+    public void setDownloadUrl(String downloadUrl) {
+        this.downloadUrl = downloadUrl;
+    }
+
     /** Set whether to show the release info of the app. If the release info is not set,
-     * nothing would be displayed as the message. **/
+     * nothing would be displayed as the message.
+     * @param showReleaseInfo Whether to show the release info of the app. **/
     public void setShowReleaseInfo(boolean showReleaseInfo) {
         this.showReleaseInfo = showReleaseInfo;
     }
 
     /** Sets the release info of the app. Even if this is set, it will not be shown unless
-     * setShowReleaseInfo is called. **/
+     * setShowReleaseInfo is called.
+     * @param releaseInfo The release info of the app. **/
     public void setReleaseInfo(String releaseInfo) {
         this.releaseInfo = releaseInfo;
     }
 
     /** Set whether the 'Learn More' button is displayed. If the URL to 'Learn More' is not set,
-     * the URL would redirect to 'about:blank'. **/
+     * the URL would redirect to 'about:blank'.
+     * @param showLearnMore Whether to display the 'Learn More' button. **/
     public void setShowLearnMore(boolean showLearnMore) {
         this.showLearnMore = showLearnMore;
     }
 
     /** Sets the Learn More URL of the app. Even if this is set, it will not be shown unless
-     * setShowLearnMore is called. **/
+     * setShowLearnMore is called.
+     * @param url The Learn More URL of the app. **/
     public void setLearnMoreUrl(String url) {
         this.learnMoreUrl = url;
     }
 
-    /** Sets the current version of the app. This is only used as the value for Template.CURRENT_VERSION. **/
+    /** Sets the current version of the app. This is only used as the value for Template.CURRENT_VERSION.
+     * @param currentVersion The current version of the app. **/
     public void setCurrentVersion(String currentVersion) {
         this.currentVersion = currentVersion;
     }
 
-    /** Sets the newer version of the app. This is only used as the value for Template.NEW_VERSION. **/
+    /** Sets the newer version of the app. This is only used as the value for Template.NEW_VERSION.
+     * @param newVersion The newer version of the app. **/
     public void setNewVersion(String newVersion) {
         this.newVersion = newVersion;
     }
@@ -204,12 +210,19 @@ public class UpdaterDialog extends DialogFragment {
         this.authString = authString;
     }
 
+    /** Sets the downloader that will be used to download the APK.
+     * @param downloader The APK downloader. **/
+    public void setDownloader(APKDownloader downloader) {
+        this.downloader = downloader;
+    }
+
     /** Message templates that will be replaced with specific values in the message section of the dialog. **/
+    @SuppressWarnings("RegExpRedundantEscape") // Escape is actually necessary, false positive
     public static class Template {
-        public static final String RELEASE_INFO = "\\$\\{releaseInfo}";
-        public static final String DOWNLOAD_URL = "\\$\\{downloadUrl}";
-        public static final String LEARN_MORE_URL = "\\$\\{learnMoreUrl}";
-        public static final String CURRENT_VERSION = "\\$\\{currentVersion}";
-        public static final String NEW_VERSION = "\\$\\{newVersion}";
+        public static final String RELEASE_INFO = "\\$\\{releaseInfo\\}";
+        public static final String DOWNLOAD_URL = "\\$\\{downloadUrl\\}";
+        public static final String LEARN_MORE_URL = "\\$\\{learnMoreUrl\\}";
+        public static final String CURRENT_VERSION = "\\$\\{currentVersion\\}";
+        public static final String NEW_VERSION = "\\$\\{newVersion\\}";
     }
 }

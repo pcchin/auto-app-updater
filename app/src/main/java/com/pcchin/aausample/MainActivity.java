@@ -23,6 +23,7 @@ import com.pcchin.aausample.testing.GitLabEndpointTest;
 import com.pcchin.aausample.testing.GiteaEndpointTest;
 import com.pcchin.aausample.testing.JSONArrayEndpointTest;
 import com.pcchin.aausample.testing.JSONObjectEndpointTest;
+import com.pcchin.auto_app_updater.dialogs.UpdaterDialog;
 import com.pcchin.auto_app_updater.utils.UpdaterFunctions;
 
 public class MainActivity extends AppCompatActivity {
@@ -30,6 +31,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        findViewById(R.id.show_update).setOnClickListener(view -> new UpdaterDialog().show(getSupportFragmentManager(), "Update"));
         if (UpdaterFunctions.isConnected(MainActivity.this)) {
             findViewById(R.id.testEndpoints).setOnClickListener(view -> {
                 Toast.makeText(MainActivity.this, "View results through Logcat", Toast.LENGTH_SHORT).show();

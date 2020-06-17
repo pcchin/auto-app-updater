@@ -37,8 +37,8 @@ public class JSONObjectEndpoint extends Endpoint {
     private String downloadUrlAttribute;
     private String learnMoreAttribute;
     private String releaseInfoAttribute;
-    private Map<String, String> headers;
     private String userAgent = Endpoint.USER_AGENT;
+    private Map<String, String> headers;
 
     //****** Start of constructors ******//
 

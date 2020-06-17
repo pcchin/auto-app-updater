@@ -26,28 +26,13 @@ import android.os.Environment;
 import androidx.annotation.NonNull;
 
 import java.io.File;
-import java.util.Arrays;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 /** A utility class for functions that are used in the updater. **/
 public class UpdaterFunctions {
     private UpdaterFunctions() {
         throw new IllegalStateException("Utility class!");
-    }
-
-    /** A static function that returns whether the app is installed through the Google Play Store.
-     * This can be useful to check if you do not wish for the app to be updated through AutoAppUpdater
-     * if it is downloaded from the Play Store.
-     * @param context The context needed to get the package manager. **/
-    public static boolean isFromGooglePlayStore(@NonNull Context context) {
-        // A list with valid installers package name
-        List<String> validInstallers = Arrays.asList("com.android.vending", "com.google.android.feedback");
-        // The package name of the app that has installed your app
-        final String installer = context.getPackageManager().getInstallerPackageName(context.getPackageName());
-        // true if your app has been downloaded from Play Store
-        return installer != null && validInstallers.contains(installer);
     }
 
     /** A static function that checks whether there is currently network connection for the app.
@@ -74,7 +59,7 @@ public class UpdaterFunctions {
 
     /** Gets the application name of the app from the given context.
      * @param context The context of the current application. **/
-    public static String getApplicationName(@NonNull Context context) {
+    static String getApplicationName(@NonNull Context context) {
         ApplicationInfo applicationInfo = context.getApplicationInfo();
         int stringId = applicationInfo.labelRes;
         return stringId == 0 ? applicationInfo.nonLocalizedLabel.toString() : context.getString(stringId);
@@ -85,7 +70,7 @@ public class UpdaterFunctions {
      * The path will always end in '/'.
      * @param context The context for the app. **/
     @NonNull
-    public static String getInternalDownloadDir(@NonNull Context context) {
+    static String getInternalDownloadDir(@NonNull Context context) {
         File downloadDirFile = context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS);
         if (downloadDirFile == null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
             downloadDirFile = context.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS);
@@ -96,13 +81,12 @@ public class UpdaterFunctions {
     /** Generates a valid file in the required directory.
      * If a file with the same name exists,
      * a file with incrementing number will be added to the file.
-     * @param fullPathName The absolute path to the directory of the file including the file name.
-     * @param extension needs to include the . at the front.**/
-    public static String generateValidFile(String fullPathName, String extension) {
-        String returnFile = fullPathName + extension;
+     * @param fullPathName The absolute path to the directory of the file including the file name. **/
+    static String generateValidFile(String fullPathName) {
+        String returnFile = fullPathName + ".apk";
         int i = 1;
         while (new File(returnFile).exists() && i < Integer.MAX_VALUE) {
-            returnFile = fullPathName + "(" + i + ")" + extension;
+            returnFile = fullPathName + "(" + i + ")" + ".apk";
             i++;
         }
         return returnFile;

@@ -43,9 +43,9 @@ import java.util.Map;
 public class GitHubEndpoint extends Endpoint {
     private String repoPath;
     private String apiPath;
-    private boolean isPrerelease;
     private String oAuthToken;
     private String userAgent = Endpoint.USER_AGENT;
+    private boolean isPrerelease;
 
     //****** Start of constructors ******//
 
