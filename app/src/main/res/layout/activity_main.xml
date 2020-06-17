@@ -77,14 +77,6 @@
             android:text="@string/show_update_dialog" />
 
         <Button
-            android:id="@+id/show_downloading"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="5sp"
-            android:layout_marginBottom="5sp"
-            android:text="@string/show_downloading" />
-
-        <Button
             android:id="@+id/testEndpoints"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

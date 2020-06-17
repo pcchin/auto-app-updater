@@ -15,6 +15,8 @@ package com.pcchin.auto_app_updater;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -101,11 +103,16 @@ public class AutoAppUpdater {
     /** Function that is called when all of the endpoints fail.
      * Use an AutoAppUpdater.ErrorListener to handle the error. **/
     @RestrictTo(RestrictTo.Scope.LIBRARY)
-    public void onFailure(Exception e) {
+    public void onFailure(final Exception e) {
         if (this.listener == null) {
             throw new IllegalStateException("AutoAppUpdater.ErrorListener cannot be null!");
         } else {
-            this.listener.onFailure(e);
+            new Handler(Looper.getMainLooper()).post(new Runnable() {
+                @Override
+                public void run() {
+                    listener.onFailure(e);
+                }
+            });
         }
     }
 
