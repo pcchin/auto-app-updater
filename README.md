@@ -1,5 +1,5 @@
 # Auto App Updater
-[![Bintray](https://api.bintray.com/packages/pcchin/auto-app-updater/com.pcchin.auto-app-updater/images/download.svg)](https://bintray.com/pcchin/auto-app-updater/com.pcchin.auto-app-updater/_latestVersion)
+[![Bintray](https://api.bintray.com/packages/pcchin/auto-app-updater/auto-app-updater/images/download.svg)](https://bintray.com/pcchin/auto-app-updater/com.pcchin.auto-app-updater/_latestVersion)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.pcchin.auto-app-updater/auto-app-updater/badge.svg)](https://search.maven.org/artifact/com.pcchin.auto-app-updater/auto-app-updater)
 
 ## Library Info
@@ -12,7 +12,7 @@ This works by getting the version info and APK download link from the desired en
 The main flow of the process would be as follows:
 1. Create a Builder of the [AutoAppUpdater](/auto-app-updater/src/main/java/com/pcchin/auto_app_updater/AutoAppUpdater.java) instance
 2. Set the update type and update version (through `setUpdateType` and `setUpdateVersion`)
-3. Set the [UpdaterDialog](/auto-app-updater/src/main/java/com/pcchin/auto_app_updater/dialogs/UpdaterDialog.java) that will be shown
+3. Set the [UpdaterDialog](/auto-app-updater/src/main/java/com/pcchin/auto_app_updater/utils/UpdaterDialog.java) that will be shown
 4. Add from existing [Endpoints](/auto-app-updater/src/main/java/com/pcchin/auto_app_updater) or add your own custom ones
 5. Call `Builder.build()` to build the [AutoAppUpdater](/auto-app-updater/src/main/java/com/pcchin/auto_app_updater/AutoAppUpdater.java) instance
 6. Call `updater.run()` whenever you wish to start the update check for the app
