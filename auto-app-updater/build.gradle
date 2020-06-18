@@ -19,8 +19,8 @@ android {
     defaultConfig {
         minSdkVersion 14
         targetSdkVersion 29
-        versionCode 2
-        versionName "1.0.1"
+        versionCode 3
+        versionName "1.0.2"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles "consumer-rules.pro"
@@ -44,7 +44,7 @@ dependencies {
     // Other implementations
     implementation 'androidx.work:work-runtime:2.3.4'
     implementation 'com.android.volley:volley:1.1.1'
-    implementation 'de.skuzzle:semantic-version:2.1.0'
+    implementation 'com.vdurmont:semver4j:3.1.0'
 }
 
 // Must be at the bottom of the file

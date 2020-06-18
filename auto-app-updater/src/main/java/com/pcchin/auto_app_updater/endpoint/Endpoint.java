@@ -23,8 +23,8 @@ import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.pcchin.auto_app_updater.AutoAppUpdater;
 import com.pcchin.auto_app_updater.utils.UpdaterDialog;
-
-import de.skuzzle.semantic.Version;
+import com.vdurmont.semver4j.Semver;
+import com.vdurmont.semver4j.SemverException;
 
 /** The endpoint used to get the updater service.
  * Extend this class to build your own endpoints. **/
@@ -33,7 +33,7 @@ public abstract class Endpoint {
     // Version needs to be changed manually here
     @SuppressWarnings("ConstantConditions")
     public static final String USER_AGENT = System.getProperty("http.agent","")
-            .replaceAll("^.+?/\\S+", "AutoAppUpdater/1.0.1");
+            .replaceAll("^.+?/\\S+", "AutoAppUpdater/1.0.2");
 
     // The endpoint that will be called if this endpoint fails.
     protected Endpoint backupEndpoint;
@@ -146,8 +146,8 @@ public abstract class Endpoint {
         boolean isSemanticUpdate = false;
         try {
             isSemanticUpdate = updateType == AutoAppUpdater.UpdateType.SEMANTIC &&
-                    Version.parseVersion(version).isGreaterThan(Version.parseVersion(currentVersionStr));
-        } catch (Version.VersionFormatException | IllegalArgumentException e) {
+                    new Semver(version).isGreaterThan(currentVersionStr);
+        } catch (SemverException | IllegalArgumentException e) {
             onFailure(e);
         }
         if (isSemanticUpdate || (updateType == AutoAppUpdater.UpdateType.DIFFERENCE && !version.equals(currentVersionStr))) {

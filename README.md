@@ -23,7 +23,7 @@ The bulk of the documentation can be found in the wiki.
 This library is available in JCenter and Maven Central. To install, you would need to include the following into your `project/build.gradle`:
 
 ```
-implementation 'com.pcchin.auto-app-updater:auto-app-updater:1.0.1'
+implementation 'com.pcchin.auto-app-updater:auto-app-updater:1.0.2'
 ```
 
 ## Test endpoints
@@ -36,11 +36,11 @@ Any contribution is welcome, feel free to add any issues or pull requests to the
 ## License
 This library is licensed under the [Apache 2.0 License](/LICENSE).
 
-License for semantic versioning implementation:
+License for semantic versioning implementation (com.vdurmont:semver4j):
 ```
 The MIT License (MIT)
 
-Copyright (c) 2014 Simon Taddiken
+Copyright (c) 2015-present Vincent DURMONT vdurmont@gmail.com
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
