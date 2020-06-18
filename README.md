@@ -23,7 +23,7 @@ The bulk of the documentation can be found in the wiki.
 This library is available in JCenter and Maven Central (in the future). To install, you would need to include the following into your `project/build.gradle`:
 
 ```
-implementation 'com.pcchin.auto-app-updater:auto-app-updater:1.0.0'
+implementation 'com.pcchin.auto-app-updater:auto-app-updater:1.0.1'
 ```
 
 ## Test endpoints

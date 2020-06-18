@@ -33,7 +33,7 @@ public abstract class Endpoint {
     // Version needs to be changed manually here
     @SuppressWarnings("ConstantConditions")
     public static final String USER_AGENT = System.getProperty("http.agent","")
-            .replaceAll("^.+?/\\S+", "AutoAppUpdater/1.0.0");
+            .replaceAll("^.+?/\\S+", "AutoAppUpdater/1.0.1");
 
     // The endpoint that will be called if this endpoint fails.
     protected Endpoint backupEndpoint;
