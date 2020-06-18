@@ -20,6 +20,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.view.View;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -28,6 +29,8 @@ import androidx.fragment.app.DialogFragment;
 
 import java.util.HashMap;
 
+/** The dialog that will be shown when a newer version of the app is found,
+ * prompting the user to update the app. **/
 public class UpdaterDialog extends DialogFragment {
     private boolean rotatable = true;
     private Dialog dialog;
@@ -108,19 +111,9 @@ public class UpdaterDialog extends DialogFragment {
                    .replaceAll(TemplateRegex.CURRENT_VERSION, currentVersion)
                    .replaceAll(TemplateRegex.NEW_VERSION, newVersion));
        }
-       if (showLearnMore) {
-           // Set the neutral button to open an external URL when clicked
-           builder.setNeutralButton("Learn More", new DialogInterface.OnClickListener() {
-               @Override
-               public void onClick(DialogInterface dialog, int which) {
-                   Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(learnMoreUrl));
-                   startActivity(intent);
-               }
-           });
-       }
-
-        final HashMap<String, String> dlParams = new HashMap<>();
+       final HashMap<String, String> dlParams = new HashMap<>();
        if (authParam != null && authString != null) dlParams.put(authParam, authString);
+       if (showLearnMore) builder.setNeutralButton("Learn More", null);
        builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
            @Override
            public void onClick(DialogInterface dialog, int which) {
@@ -136,7 +129,23 @@ public class UpdaterDialog extends DialogFragment {
                dialog.dismiss();
            }
        });
-       return builder.create();
+       AlertDialog dialog = builder.create();
+       if (showLearnMore) {
+           dialog.setOnShowListener(new DialogInterface.OnShowListener() {
+               @Override
+               public void onShow(DialogInterface dialog1) {
+                   // Sets the 'Learn More' buttons here so that the dialog would not be dismissed on that button click
+                   ((AlertDialog) dialog1).getButton(DialogInterface.BUTTON_NEUTRAL).setOnClickListener(new View.OnClickListener() {
+                       @Override
+                       public void onClick(View v) {
+                           Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(learnMoreUrl));
+                           startActivity(intent);
+                       }
+                   });
+               }
+           });
+       }
+       return dialog;
     }
 
     /** Sets whether the fragment is rotatable. The default is set to true.
@@ -152,7 +161,7 @@ public class UpdaterDialog extends DialogFragment {
     }
 
     /** Sets the update message for the app. Certain templates can be used.
-     * The possible templates that can be used are found in MessageTemplate.class.
+     * The possible templates that can be used are found in UpdateDialog.Template.
      * @param updateMessage The update message for the app. **/
     public void setUpdateMessage(String updateMessage) {
         this.updateMessage = updateMessage;
@@ -192,13 +201,13 @@ public class UpdaterDialog extends DialogFragment {
         this.learnMoreUrl = url;
     }
 
-    /** Sets the current version of the app. This is only used as the value for TemplateRegex.CURRENT_VERSION.
+    /** Sets the current version of the app. This is only used as the value for Template.CURRENT_VERSION.
      * @param currentVersion The current version of the app. **/
     public void setCurrentVersion(String currentVersion) {
         this.currentVersion = currentVersion;
     }
 
-    /** Sets the newer version of the app. This is only used as the value for TemplateRegex.NEW_VERSION.
+    /** Sets the newer version of the app. This is only used as the value for Template.NEW_VERSION.
      * @param newVersion The newer version of the app. **/
     public void setNewVersion(String newVersion) {
         this.newVersion = newVersion;

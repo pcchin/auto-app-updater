@@ -118,7 +118,8 @@ public class AutoAppUpdater {
 
     /** The builder class for creating the AutoAppUpdater.
      * The order of method calls should be
-     * setUpdateType -> setCurrentVersion -> setUpdateDialog -> setDownloader -> addEndpoint / addEndpoints.
+     * setUpdateType -> setCurrentVersion -> setUpdateDialog (Optional) -> setDownloader (Optional)
+     * -> addEndpoint / addEndpoints.
      * The full lifecycle can be found in the Wiki of the repository.**/
     public static class Builder {
         private Context bContext;

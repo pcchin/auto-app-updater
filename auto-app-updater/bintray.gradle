@@ -63,8 +63,8 @@ bintray {
         githubRepo = 'pcchin/auto-app-updater'
 
         version {
-            name = '1.1.0'
-            vcsTag = '1.1.0'
+            name = '1.0.1'
+            vcsTag = '1.0.1'
             gpg {
                 sign = true
             }
