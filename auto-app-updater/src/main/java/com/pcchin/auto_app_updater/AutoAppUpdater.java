@@ -37,8 +37,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
-/** An updater that checks for updates to the app.
- * This is the class that should be started first when running the updater. **/
+/** An updater that checks for updates to the app. **/
 public class AutoAppUpdater {
     private Context context;
     private ErrorListener listener;
@@ -48,7 +47,7 @@ public class AutoAppUpdater {
 
     /** The type of update checks that will be performed. **/
     public enum UpdateType {
-        /** The semantic versioning from http://semver.org/. **/
+        /** The semantic versioning from https://semver.org/. **/
         SEMANTIC,
         /** As long as the version provided differs from the current version, a version update would be needed. **/
         DIFFERENCE,
@@ -58,62 +57,6 @@ public class AutoAppUpdater {
         /** The version provided will be a decimal number, and if the number is larger than the current one,
          * the app would need to be updated. **/
         DECIMAL_INCREMENTAL
-    }
-
-    /** The constructor for the class, only used by the builder.
-     * @param context The context used by the app. **/
-    private AutoAppUpdater(Context context) {
-        this.context = context;
-        deletePreviousAPKs();
-    }
-
-    /** Delete the previous APKs that are downloaded from the app. **/
-    private void deletePreviousAPKs() {
-        SharedPreferences sharedPref = context.getSharedPreferences("com.pcchin.auto_app_updater", Context.MODE_PRIVATE);
-        Set<String> previousApkList = UpdaterFunctions.getApkStringSet(sharedPref);
-        for (String previousApk: previousApkList) {
-            if (new File(previousApk).delete()) {
-                previousApkList.remove(previousApk);
-            }
-        }
-        SharedPreferences.Editor editor = sharedPref.edit();
-        editor.putStringSet("previousApkList", null);
-        editor.apply();
-    }
-
-    /** Starts the update checking process. **/
-    public void run() {
-        if (UpdaterFunctions.isConnected(context)) {
-            SharedPreferences sharedPref = context.getSharedPreferences("com.pcchin.auto_app_updater", Context.MODE_PRIVATE);
-            long lastRunTime = sharedPref.getLong("lastRunTime", 0);
-            long currentTime = new Date().getTime();
-            if (((currentTime - lastRunTime) / 1000) >= updateInterval) {
-                // Update the shared preferences
-                SharedPreferences.Editor editor = sharedPref.edit();
-                editor.putLong("lastRunTime", currentTime);
-                editor.apply();
-
-                if (endpointList.size() > 0) {
-                    endpointList.get(0).update();
-                }
-            }
-        }
-    }
-
-    /** Function that is called when all of the endpoints fail.
-     * Use an AutoAppUpdater.ErrorListener to handle the error. **/
-    @RestrictTo(RestrictTo.Scope.LIBRARY)
-    public void onFailure(final Exception e) {
-        if (this.listener == null) {
-            throw new IllegalStateException("AutoAppUpdater.ErrorListener cannot be null!");
-        } else {
-            new Handler(Looper.getMainLooper()).post(new Runnable() {
-                @Override
-                public void run() {
-                    listener.onFailure(e);
-                }
-            });
-        }
     }
 
     /** The builder class for creating the AutoAppUpdater.
@@ -345,5 +288,61 @@ public class AutoAppUpdater {
         /** The function that is called when the error is returned by the endpoint.
          * @param e The exception that is thrown by the endpoint. **/
         public abstract void onFailure(Exception e);
+    }
+
+    /** The constructor for the class, only used by the builder.
+     * @param context The context used by the app. **/
+    private AutoAppUpdater(Context context) {
+        this.context = context;
+        deletePreviousAPKs();
+    }
+
+    /** Delete the previous APKs that are downloaded from the app. **/
+    private void deletePreviousAPKs() {
+        SharedPreferences sharedPref = context.getSharedPreferences("com.pcchin.auto_app_updater", Context.MODE_PRIVATE);
+        Set<String> previousApkList = UpdaterFunctions.getApkStringSet(sharedPref);
+        for (String previousApk: previousApkList) {
+            if (new File(previousApk).delete()) {
+                previousApkList.remove(previousApk);
+            }
+        }
+        SharedPreferences.Editor editor = sharedPref.edit();
+        editor.putStringSet("previousApkList", null);
+        editor.apply();
+    }
+
+    /** Starts the update checking process. **/
+    public void run() {
+        if (UpdaterFunctions.isConnected(context)) {
+            SharedPreferences sharedPref = context.getSharedPreferences("com.pcchin.auto_app_updater", Context.MODE_PRIVATE);
+            long lastRunTime = sharedPref.getLong("lastRunTime", 0);
+            long currentTime = new Date().getTime();
+            if (((currentTime - lastRunTime) / 1000) >= updateInterval) {
+                // Update the shared preferences
+                SharedPreferences.Editor editor = sharedPref.edit();
+                editor.putLong("lastRunTime", currentTime);
+                editor.apply();
+
+                if (endpointList.size() > 0) {
+                    endpointList.get(0).update();
+                }
+            }
+        }
+    }
+
+    /** Function that is called when all of the endpoints fail.
+     * Use an AutoAppUpdater.ErrorListener to handle the error. **/
+    @RestrictTo(RestrictTo.Scope.LIBRARY)
+    public void onFailure(final Exception e) {
+        if (this.listener == null) {
+            throw new IllegalStateException("AutoAppUpdater.ErrorListener cannot be null!");
+        } else {
+            new Handler(Looper.getMainLooper()).post(new Runnable() {
+                @Override
+                public void run() {
+                    listener.onFailure(e);
+                }
+            });
+        }
     }
 }

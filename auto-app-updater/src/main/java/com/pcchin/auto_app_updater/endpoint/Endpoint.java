@@ -33,7 +33,7 @@ public abstract class Endpoint {
     // Version needs to be changed manually here
     @SuppressWarnings("ConstantConditions")
     public static final String USER_AGENT = System.getProperty("http.agent","")
-            .replaceAll("^.+?/\\S+", "AutoAppUpdater/1.0.2");
+            .replaceAll("^.+?/\\S+", "AutoAppUpdater/1.0.3");
 
     // The endpoint that will be called if this endpoint fails.
     protected Endpoint backupEndpoint;
@@ -63,7 +63,7 @@ public abstract class Endpoint {
         this.backupEndpoint = backupEndpoint;
     }
 
-    /** Sets the current version of the app from within AutoAppUpdater.
+    /** Sets the update dialog that will be shown for the endpoint.
      * This function does not need to be called manually as it is called within AutoAppUpdater.
      * @param dialog The dialog that will be shown if a newer version of the app is found.
      * @param manager The Fragment manager that will be used to display the dialog.

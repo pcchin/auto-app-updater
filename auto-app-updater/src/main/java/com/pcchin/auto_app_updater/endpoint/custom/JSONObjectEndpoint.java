@@ -29,8 +29,7 @@ import org.json.JSONObject;
 import java.util.HashMap;
 import java.util.Map;
 
-/** The endpoint which returns a JSON object.
- * The object is assumed to contain no further objects. **/
+/** The endpoint which returns a JSON object. **/
 public class JSONObjectEndpoint extends Endpoint {
     private String requestUrl;
     private String versionAttribute;

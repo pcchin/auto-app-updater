@@ -175,4 +175,10 @@ public class APKDownloader {
     public void setMaxRetryCount(int maxRetryCount) {
         this.maxRetryCount = maxRetryCount;
     }
+
+    /** Sets the download path for the APK.
+     * @param downloadPath The download path of the APK. **/
+    public void setDownloadPath(String downloadPath) {
+        this.downloadPath = downloadPath;
+    }
 }

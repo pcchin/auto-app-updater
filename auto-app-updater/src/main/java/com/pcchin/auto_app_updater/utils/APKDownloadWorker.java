@@ -65,15 +65,25 @@ public class APKDownloadWorker extends Worker {
     public static final String APK_DOWNLOAD_WORKER = "APKDownloadWorker";
     private static final String FILE_ERROR = "File Error";
 
+    /** The content provider from the app that is used to open the APK file. **/
     public static final String CONTENT_PROVIDER = "contentProvider";
+    /** The URL of the APK that will be downloaded. **/
     public static final String DOWNLOAD_URL = "downloadUrl";
+    /** The path that the APK will be downloaded to. **/
     public static final String DOWNLOAD_PATH = "downloadPath";
+    /** The keys used for the headers in the request that is used to download the file. **/
     public static final String HEADER_KEYS = "headerKeys";
+    /** The values for the keys in HEADER_KEYS. Should be the same length as HEADER_KEYS. **/
     public static final String HEADER_VALUES = "headerValues";
+    /** The maximum amount of tries that the worker will run before giving up, defaults to 5. **/
     public static final String MAX_RETRY = "maxRetryCount";
+    /** The title of the notification that will be shown. **/
     public static final String NOTIF_TITLE = "notifTitle";
+    /** The message of the notification that will be shown. **/
     public static final String NOTIF_MSG = "notifMsg";
+    /** The icon that will be used when displaying the notification. **/
     public static final String NOTIF_ICON = "notifIcon";
+    /** The channel that is used to display the notification. **/
     public static final String NOTIF_CHANNEL = "notifChannel";
 
     private Context context;

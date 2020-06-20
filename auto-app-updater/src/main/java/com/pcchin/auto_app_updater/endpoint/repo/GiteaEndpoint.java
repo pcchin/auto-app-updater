@@ -59,9 +59,10 @@ public class GiteaEndpoint extends Endpoint {
 
     //****** Start of constructors ******//
 
-    /** Default constructor with the repo path and whether to include pre-releases specified.
+    /** Default constructor with the repo path.
      * The API path is assumed to be https://try.gitea.io and no tokens will be used.
      * No pre releases will be included in the version check.
+     * No tokens will be used.
      * @param repoPath The path for the repository in the form of user/repo. **/
     public GiteaEndpoint(String repoPath) {
         this(repoPath, false);
@@ -69,6 +70,7 @@ public class GiteaEndpoint extends Endpoint {
 
     /** Default constructor with the repo path and whether to include pre-releases specified.
      * The API path is assumed to be https://try.gitea.io and no tokens will be used.
+     * No tokens will be used.
      * @param repoPath The path for the repository in the form of user/repo.
      * @param isPreRelease Whether to include pre releases in the version check. **/
     public GiteaEndpoint(String repoPath, boolean isPreRelease) {

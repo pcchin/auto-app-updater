@@ -60,14 +60,14 @@ public class GitLabEndpoint extends Endpoint {
 
     //****** Start of constructors ******//
 
-    /** Default constructor with the repo path and whether to include pre-releases specified.
+    /** Default constructor with the project ID specified.
      * The API path is assumed to be https://gitlab.com and no tokens will be used.
      * @param projectId The ID for the repository required. **/
     public GitLabEndpoint(int projectId) {
         this(projectId, "https://gitlab.com");
     }
 
-    /** Default constructor with the repo path and whether to include pre-releases specified.
+    /** Default constructor with the project ID specified.
      * No tokens will be used.
      * @param projectId The ID for the repository required.
      * @param apiPath The path to access the API (Include https:// and without / at the end). **/
@@ -75,7 +75,7 @@ public class GitLabEndpoint extends Endpoint {
         this(projectId, apiPath, GitLabAuth.NONE, null);
     }
 
-    /** Default constructor with the repo path and whether to include pre-releases specified.
+    /** Default constructor with the project ID specified.
      * The API path is assumed to be https://gitlab.com.
      * @param projectId The ID for the repository required.
      * @param authMethod The method which is used to authorize the app.
@@ -84,7 +84,7 @@ public class GitLabEndpoint extends Endpoint {
         this(projectId, "https://gitlab.com", authMethod, authString);
     }
 
-    /** Default constructor with the repo path and whether to include pre-releases specified.
+    /** Default constructor with the project ID specified.
      * @param projectId The ID for the repository required.
      * @param apiPath The path to access the API (Include https:// and without / at the end).
      * @param authMethod The method which is used to authorize the app.

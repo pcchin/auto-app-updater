@@ -12,7 +12,7 @@
  */
 
 apply plugin: 'com.jfrog.bintray'
-version = '1.0.2' // Not jFrog version
+version = '1.0.3' // Not jFrog version
 
 task sourcesJar(type: Jar) {
     from android.sourceSets.main.java.srcDirs
@@ -63,8 +63,8 @@ bintray {
         githubRepo = 'pcchin/auto-app-updater'
 
         version {
-            name = '1.0.2'
-            vcsTag = '1.0.2'
+            name = '1.0.3'
+            vcsTag = '1.0.3'
             gpg {
                 sign = true
             }

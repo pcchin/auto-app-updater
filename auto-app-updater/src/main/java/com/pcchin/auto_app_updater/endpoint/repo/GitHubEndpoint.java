@@ -49,7 +49,7 @@ public class GitHubEndpoint extends Endpoint {
 
     //****** Start of constructors ******//
 
-    /** Default constructor with the repo path and whether to include pre-releases specified.
+    /** Default constructor with the repo path.
      * The API path is assumed to be https://api.github.com and no OAuth2 token will be used.
      * No pre releases will be included in the version check.
      * @param repoPath The path for the repository in the form of user/repo. **/

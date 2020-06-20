@@ -30,7 +30,7 @@ import org.json.JSONObject;
 import java.util.HashMap;
 import java.util.Map;
 
-/** Thee endpoint which returns a JSON array.
+/** The endpoint which returns a JSON array.
  * It is assumed that each object in the array would contain the same attributes.
  * Only the first object of the array would be taken into account.
  * If an empty array is returned, onFailure would be called. **/
