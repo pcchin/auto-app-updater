@@ -41,5 +41,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - UpdaterDialog
 - UpdaterFunctions
 
+[1.0.4]: https://github.com/pcchin/auto-app-updater/compare/1.0.3...1.0.4
 [1.0.3]: https://github.com/pcchin/auto-app-updater/compare/1.0.2...1.0.3
 [1.0.2]: https://github.com/pcchin/auto-app-updater/releases/tag/1.0.2
