@@ -1,6 +1,8 @@
 # Auto App Updater
-[![Bintray](https://api.bintray.com/packages/pcchin/auto-app-updater/auto-app-updater/images/download.svg)](https://bintray.com/pcchin/auto-app-updater/com.pcchin.auto-app-updater/_latestVersion)
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.pcchin.auto-app-updater/auto-app-updater/badge.svg)](https://search.maven.org/artifact/com.pcchin.auto-app-updater/auto-app-updater)
+
+## Deprecation notice
+
+This library is no longer actively maintained. If you are looking for similar libraries, consider using [AppUpdater](https://github.com/javiersantos/AppUpdater).
 
 ## Library Info
 An Android library that allows for easy updating of the app through endpoints such as GitHub, JSON, XML etc.
